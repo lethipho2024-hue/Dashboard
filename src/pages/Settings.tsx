@@ -21,32 +21,34 @@ export default function Settings() {
         <p className="text-text-secondary mt-1">Configure your ZBGym Control Center</p>
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar */}
-        <div className="w-64 flex-shrink-0">
+        <div className="w-full md:w-64 flex-shrink-0">
           <div className="card p-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500/20 text-blue-400'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{tab.label}</span>
-                </button>
-              )
-            })}
+            <div className="flex md:block gap-1 overflow-x-auto md:overflow-visible">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors whitespace-nowrap flex-shrink-0 md:flex-shrink ${
+                      activeTab === tab.id
+                        ? 'bg-blue-500/20 text-blue-400'
+                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <span className="font-medium">{tab.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {activeTab === 'general' && (
             <div className="card space-y-6">
               <h3 className="text-lg font-semibold text-text-primary">General Settings</h3>
