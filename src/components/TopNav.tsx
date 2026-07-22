@@ -56,7 +56,7 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
   }
 
   return (
-    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-white/5 bg-bg-secondary/50 backdrop-blur-sm">
+    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-white/5 bg-bg-secondary/50 backdrop-blur-sm pl-14 max-[767px]:pl-14">
       {/* Left: Search - Hidden on mobile */}
       <div className="hidden md:flex items-center gap-4">
         <button 

@@ -72,10 +72,10 @@ export default function Sidebar({ currentPage, setCurrentPage, collapsed, setCol
 
   return (
     <>
-      {/* Mobile Hamburger Button */}
+      {/* Mobile Hamburger Button - Hidden on desktop */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-white/10 md:hidden backdrop-blur-xl"
+        className="hidden max-[767px]:flex fixed top-4 left-4 z-50 p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-white/10 backdrop-blur-xl"
       >
         <Menu className="w-5 h-5 text-[var(--text-primary)]" />
       </button>
