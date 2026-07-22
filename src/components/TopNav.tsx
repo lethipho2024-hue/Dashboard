@@ -63,21 +63,21 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
       shadow-[0_4px_30px_rgba(0,0,0,0.3)]
       rounded-b-lg">
       
-      {/* Left: Logo & Brand */}
-      <div className="flex items-center gap-4">
+      {/* Left: Logo & Brand - Mobile: pl to avoid hamburger */}
+      <div className="flex items-center gap-4 pl-14 md:pl-0">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Zap className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 sm:w-9 rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
-            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-500 rounded-full animate-pulse" />
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight text-[var(--text-primary)] leading-tight">ZBGym</h1>
+            <h1 className="text-sm sm:text-base font-bold tracking-tight text-[var(--text-primary)] leading-tight">ZBGym</h1>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-medium text-green-400 uppercase tracking-wider">Online</span>
+              <span className="text-[9px] sm:text-[10px] font-medium text-green-400 uppercase tracking-wider">Online</span>
             </div>
           </div>
         </div>
