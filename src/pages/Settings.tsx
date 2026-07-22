@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Settings as SettingsIcon, Palette, Gauge, Bell, Globe, Code, Save, Check } from 'lucide-react'
+import { Settings as SettingsIcon, Palette, Gauge, Bell, Globe, Code, Save, Check, Loader2, AlertCircle } from 'lucide-react'
 import { loadSettings, saveSettings } from '../services/mock'
+import { getClient } from '../services/zbgym/client'
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState('general')
@@ -39,6 +40,24 @@ export default function Settings() {
   const [logLevel, setLogLevel] = useState('INFO')
   const [apiEndpoint, setApiEndpoint] = useState('http://localhost:8080')
   const [showApiInput, setShowApiInput] = useState(false)
+  
+  // Health check
+  const [healthStatus, setHealthStatus] = useState<'idle' | 'checking' | 'healthy' | 'unhealthy'>('idle')
+  const [healthError, setHealthError] = useState<string | null>(null)
+  
+  const checkHealth = async () => {
+    setHealthStatus('checking')
+    setHealthError(null)
+    try {
+      getClient(apiEndpoint)
+      const client = getClient()
+      const health = await client.getHealth()
+      setHealthStatus(health.status === 'healthy' ? 'healthy' : 'unhealthy')
+    } catch (err) {
+      setHealthStatus('unhealthy')
+      setHealthError(err instanceof Error ? err.message : 'Connection failed')
+    }
+  }
 
   // Load settings on mount
   useEffect(() => {
@@ -479,6 +498,38 @@ export default function Settings() {
                     className="px-4 py-2 rounded-lg bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors text-sm"
                   >
                     Change
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
+                  <div>
+                    <p className="text-[var(--text-primary)] font-medium">Connection Status</p>
+                    {healthStatus === 'unhealthy' && healthError && (
+                      <p className="text-sm text-red-400">{healthError}</p>
+                    )}
+                    {healthStatus === 'healthy' && (
+                      <p className="text-sm text-green-400">Framework is healthy</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={checkHealth}
+                    disabled={healthStatus === 'checking'}
+                    className={`px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                      healthStatus === 'healthy' 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : healthStatus === 'unhealthy'
+                        ? 'bg-red-500/20 text-red-400'
+                        : 'bg-white/10 text-[var(--text-secondary)] hover:bg-white/20'
+                    }`}
+                  >
+                    {healthStatus === 'checking' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : healthStatus === 'healthy' ? (
+                      <Check className="w-4 h-4" />
+                    ) : healthStatus === 'unhealthy' ? (
+                      <AlertCircle className="w-4 h-4" />
+                    ) : null}
+                    {healthStatus === 'checking' ? 'Checking...' : 'Check Connection'}
                   </button>
                 </div>
               </div>

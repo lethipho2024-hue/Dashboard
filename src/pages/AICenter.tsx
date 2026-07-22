@@ -1,58 +1,18 @@
-import { Bot, Brain, Code, TestTube, Search } from 'lucide-react'
+import { Bot, Brain, Code, TestTube, Loader2, AlertCircle, RefreshCw, Play } from 'lucide-react'
+import { useModels, useEvaluateModel } from '../services/zbgym'
+import { useState } from 'react'
 
 export default function AICenter() {
-  const agents = [
-    { 
-      name: 'Planner', 
-      role: 'Strategic planning agent',
-      status: 'active',
-      avatar: '🧠',
-      currentTask: 'Analyzing next episode strategy',
-      runtime: '02:34:12',
-      progress: 75,
-      memory: '1.2 GB'
-    },
-    { 
-      name: 'Builder', 
-      role: 'Architecture builder agent',
-      status: 'active',
-      avatar: '🏗️',
-      currentTask: 'Building neural network layers',
-      runtime: '01:45:30',
-      progress: 45,
-      memory: '2.4 GB'
-    },
-    { 
-      name: 'Coder', 
-      role: 'Code generation agent',
-      status: 'active',
-      avatar: '💻',
-      currentTask: 'Implementing reward functions',
-      runtime: '02:10:00',
-      progress: 60,
-      memory: '1.8 GB'
-    },
-    { 
-      name: 'Reviewer', 
-      role: 'Code review agent',
-      status: 'idle',
-      avatar: '👀',
-      currentTask: 'Waiting for tasks',
-      runtime: '00:30:00',
-      progress: 0,
-      memory: '856 MB'
-    },
-    { 
-      name: 'Tester', 
-      role: 'Testing and validation agent',
-      status: 'active',
-      avatar: '🧪',
-      currentTask: 'Running simulation tests',
-      runtime: '01:20:45',
-      progress: 90,
-      memory: '1.5 GB'
-    },
-  ]
+  const { data: models, loading, error, refetch } = useModels()
+  const { evaluate, loading: evaluating } = useEvaluateModel()
+  const [evaluationResults, setEvaluationResults] = useState<Record<number, number>>({})
+
+  const handleEvaluate = async (modelId: number) => {
+    const result = await evaluate(modelId, 10)
+    if (result) {
+      setEvaluationResults(prev => ({ ...prev, [modelId]: result.mean_reward }))
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -60,97 +20,119 @@ export default function AICenter() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Center</h1>
-          <p className="text-[var(--text-secondary)] mt-1">Monitor and manage AI agents</p>
+          <p className="text-[var(--text-secondary)] mt-1">Manage trained models</p>
         </div>
         <div className="flex items-center gap-4">
+          <button onClick={() => refetch()} className="btn btn-secondary flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
           <div className="px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center gap-2">
             <Bot className="w-4 h-4 text-purple-400" />
-            <span className="text-sm font-medium text-purple-400">{agents.filter(a => a.status === 'active').length} Active</span>
+            <span className="text-sm font-medium text-purple-400">{models?.length || 0} Models</span>
           </div>
         </div>
       </div>
 
-      {/* Agent Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {agents.map((agent) => (
-          <div key={agent.name} className="card group hover:scale-[1.02] transition-transform">
-            {/* Header */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-2xl">
-                  {agent.avatar}
+      {/* Error State */}
+      {error && (
+        <div className="card bg-red-500/10 border border-red-500/20 p-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <p className="text-red-400">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* AI Agents - Not available */}
+      <div className="card opacity-60">
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">AI Agents</h3>
+        <p className="text-[var(--text-secondary)] text-center py-8">
+          AI Agent monitoring requires additional backend endpoints. Currently showing trained models from the framework.
+        </p>
+      </div>
+
+      {/* Models from Backend */}
+      {loading ? (
+        <div className="card flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-purple-400 mr-3" />
+          <span className="text-[var(--text-secondary)]">Loading models...</span>
+        </div>
+      ) : models && models.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {models.map((model) => (
+            <div key={model.id} className="card group hover:scale-[1.02] transition-transform">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center">
+                    <Brain className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-[var(--text-primary)]">{model.name}</h3>
+                    <p className="text-xs text-[var(--text-secondary)]">{model.algorithm}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-[var(--text-primary)]">{agent.name}</h3>
-                  <p className="text-xs text-[var(--text-secondary)]">{agent.role}</p>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--text-secondary)]">Environment</span>
+                  <span className="text-xs text-[var(--text-primary)]">{model.env_id}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--text-secondary)]">Created</span>
+                  <span className="text-xs text-[var(--text-primary)]">{new Date(model.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--text-secondary)]">Model ID</span>
+                  <span className="text-xs text-[var(--text-primary)]">#{model.id}</span>
                 </div>
               </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                agent.status === 'active' 
-                  ? 'bg-green-500/20 text-green-400' 
-                  : 'bg-white/10 text-[var(--text-secondary)]'
-              }`}>
-                {agent.status}
-              </span>
-            </div>
 
-            {/* Current Task */}
-            <div className="mb-4">
-              <p className="text-xs text-[var(--text-secondary)] mb-1">Current Task</p>
-              <p className="text-sm text-[var(--text-primary)]">{agent.currentTask}</p>
-            </div>
+              {evaluationResults[model.id] !== undefined && (
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 mb-4">
+                  <span className="text-xs text-green-400">Mean Reward: {evaluationResults[model.id].toFixed(3)}</span>
+                </div>
+              )}
 
-            {/* Progress */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-[var(--text-secondary)]">Progress</span>
-                <span className="text-xs font-medium text-[var(--text-primary)]">{agent.progress}%</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-500"
-                  style={{ width: `${agent.progress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/10">
-              <div>
-                <p className="text-xs text-[var(--text-secondary)]">Runtime</p>
-                <p className="text-sm font-mono text-[var(--text-primary)]">{agent.runtime}</p>
-              </div>
-              <div>
-                <p className="text-xs text-[var(--text-secondary)]">Memory</p>
-                <p className="text-sm font-mono text-[var(--text-primary)]">{agent.memory}</p>
-              </div>
-              <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-sm transition-colors">
-                Details
+              <button
+                onClick={() => handleEvaluate(model.id)}
+                disabled={evaluating}
+                className="w-full btn btn-secondary flex items-center justify-center gap-2"
+              >
+                {evaluating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4" />
+                )}
+                Evaluate
               </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card">
+          <p className="text-[var(--text-secondary)] text-center py-12">
+            No trained models available. Train a model first using the Trainer page.
+          </p>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="card">
         <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
-          <button className="px-4 py-2 rounded-xl bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-xl bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors flex items-center gap-2" disabled>
             <Brain className="w-4 h-4" />
-            Add Agent
+            Train New Model
           </button>
-          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2" disabled>
             <Code className="w-4 h-4" />
-            Deploy All
+            Export Model
           </button>
-          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2" disabled>
             <TestTube className="w-4 h-4" />
-            Run Tests
-          </button>
-          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2">
-            <Search className="w-4 h-4" />
-            Analyze
+            Benchmark
           </button>
         </div>
       </div>

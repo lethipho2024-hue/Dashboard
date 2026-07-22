@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Check, AlertTriangle, Monitor, Globe, RefreshCw, Loader2 } from 'lucide-react'
-import { licenseInfo, activationHistory } from '../services/mock'
+import { Check, AlertTriangle, Monitor, Globe, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
+import { useHealth } from '../services/zbgym'
 
 export default function License() {
+  const { data: health } = useHealth()
   const [checking, setChecking] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<string | null>(null)
 
@@ -21,10 +22,6 @@ export default function License() {
 
   const handleViewDetails = () => {
     setUpdateStatus('License details: Pro Edition, 5 seats, Premium Support')
-  }
-
-  const handleManageDevices = () => {
-    setUpdateStatus('Device management panel opened')
   }
 
   return (
@@ -64,25 +61,31 @@ export default function License() {
               <Check className="w-8 h-8 text-green-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-green-400">License Active</h3>
-              <p className="text-[var(--text-secondary)]">Your license is valid and up to date</p>
+              <h3 className="text-xl font-bold text-green-400">License Status</h3>
+              <p className="text-[var(--text-secondary)]">License management requires backend integration</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-              <span className="text-[var(--text-secondary)]">License Type</span>
-              <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-400 font-medium">
-                Pro Edition
+              <span className="text-[var(--text-secondary)]">Framework Status</span>
+              <span className={`px-3 py-1 rounded-full font-medium ${
+                health?.status === 'healthy' 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : 'bg-yellow-500/20 text-yellow-400'
+              }`}>
+                {health?.status === 'healthy' ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-              <span className="text-[var(--text-secondary)]">Expiration Date</span>
-              <span className="text-[var(--text-primary)] font-medium">{licenseInfo.expiryDate}</span>
-            </div>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-              <span className="text-[var(--text-secondary)]">License Key</span>
-              <span className="font-mono text-sm text-[var(--text-primary)]">{licenseInfo.key}</span>
+            <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+              <div className="flex items-center gap-2 text-yellow-400 mb-2">
+                <AlertCircle className="w-4 h-4" />
+                <span className="font-medium">License Not Available from Backend</span>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)]">
+                License tracking requires a license management endpoint in the ZBGym backend. 
+                The license data shown here is a demo placeholder.
+              </p>
             </div>
           </div>
 
@@ -92,28 +95,18 @@ export default function License() {
           </div>
         </div>
 
-        {/* Devices Card */}
-        <div className="card">
+        {/* Devices Card - Not available */}
+        <div className="card opacity-75">
           <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Active Devices</h3>
-          
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[var(--text-secondary)]">{licenseInfo.usedSeats} of {licenseInfo.seats} devices</span>
-              <span className="text-[var(--text-primary)] font-medium">{licenseInfo.usedSeats}/{licenseInfo.seats}</span>
-            </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
-                style={{ width: `${(licenseInfo.usedSeats / licenseInfo.seats) * 100}%` }}
-              />
-            </div>
+          <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 mb-4">
+            <p className="text-sm text-[var(--text-secondary)]">
+              Device tracking requires a license management endpoint in the ZBGym backend.
+            </p>
           </div>
-
-          <div className="space-y-3">
+          <div className="space-y-3 opacity-50">
             {[
-              { name: 'MacBook Pro (Primary)', type: 'Desktop', lastActive: '2 min ago', status: 'online' },
-              { name: 'Windows Desktop', type: 'Desktop', lastActive: '1 hour ago', status: 'online' },
-              { name: 'iPad Pro (Secondary)', type: 'Mobile', lastActive: '5 min ago', status: 'online' },
+              { name: 'Demo Device 1', type: 'Desktop', lastActive: 'Now' },
+              { name: 'Demo Device 2', type: 'Mobile', lastActive: '1 hour ago' },
             ].map((device, idx) => (
               <div key={idx} className="flex items-center justify-between p-4 rounded-xl bg-white/5">
                 <div className="flex items-center gap-3">
@@ -123,17 +116,13 @@ export default function License() {
                     <p className="text-xs text-[var(--text-secondary)]">{device.type} · {device.lastActive}</p>
                   </div>
                 </div>
-                <span className="flex items-center gap-1.5 text-green-400 text-sm">
-                  <span className="w-2 h-2 rounded-full bg-green-400" />
-                  Online
+                <span className="flex items-center gap-1.5 text-[var(--text-secondary)] text-sm">
+                  <span className="w-2 h-2 rounded-full bg-[var(--text-secondary)]" />
+                  N/A
                 </span>
               </div>
             ))}
           </div>
-
-          <button onClick={handleManageDevices} className="w-full mt-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-[var(--text-secondary)] text-sm transition-colors">
-            Manage Devices
-          </button>
         </div>
       </div>
 
@@ -165,11 +154,19 @@ export default function License() {
         </div>
       </div>
 
-      {/* Activation History */}
-      <div className="card">
+      {/* Activation History - Not available */}
+      <div className="card opacity-75">
         <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Activation History</h3>
-        <div className="space-y-3">
-          {activationHistory.map((item, idx) => (
+        <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 mb-4">
+          <p className="text-sm text-[var(--text-secondary)]">
+            Activation history requires a license management endpoint in the ZBGym backend.
+          </p>
+        </div>
+        <div className="space-y-3 opacity-50">
+          {[
+            { event: 'Demo Activation', device: 'Demo Device', date: '2026-01-01' },
+            { event: 'Demo Renewal', device: 'Demo Device', date: '2026-06-15' },
+          ].map((item, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
               <div className="flex items-center gap-3">
                 <Globe className="w-4 h-4 text-[var(--text-secondary)]" />
