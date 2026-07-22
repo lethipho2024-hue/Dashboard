@@ -1,18 +1,28 @@
-import { Play, Pause, Download, HardDrive, Clock, FileArchive, Circle } from 'lucide-react'
+import { Play, Pause, Download, HardDrive, Clock, FileArchive, Circle, Loader2, AlertCircle, RefreshCw } from 'lucide-react'
+import { useSessions } from '../services/zbgym'
 
 export default function Replay() {
-  const replayStats = [
-    { label: 'Current Episode', value: '1,247', icon: Circle },
-    { label: 'Replay Size', value: '2.4 GB', icon: FileArchive },
-    { label: 'Compression', value: '85%', icon: FileArchive },
-    { label: 'Storage Used', value: '24 GB', icon: HardDrive },
-  ]
+  const { data: sessions, loading, refetch } = useSessions()
 
-  const recordings = [
-    { name: 'Episode_1247', duration: '00:15:30', size: '2.4 GB', date: '2 min ago', status: 'recording' },
-    { name: 'Episode_1246', duration: '00:14:45', size: '2.1 GB', date: '15 min ago', status: 'saved' },
-    { name: 'Episode_1245', duration: '00:16:20', size: '2.6 GB', date: '30 min ago', status: 'saved' },
-    { name: 'Episode_1244', duration: '00:13:50', size: '1.9 GB', date: '45 min ago', status: 'saved' },
+  // Get completed sessions as "recordings"
+  const recordings = (sessions || [])
+    .filter(s => s.status === 'completed' || s.status === 'running')
+    .map(s => ({
+      id: s.id,
+      name: `Session #${s.id}`,
+      env: s.env_id,
+      algorithm: s.algorithm,
+      steps: s.current_timestep,
+      reward: s.mean_reward,
+      status: s.status === 'running' ? 'recording' : 'saved',
+      duration: s.status === 'running' ? 'In Progress' : 'Completed'
+    }))
+
+  const replayStats = [
+    { label: 'Total Sessions', value: sessions?.length?.toString() || '0', icon: Circle },
+    { label: 'Completed', value: recordings.filter(r => r.status === 'saved').length.toString(), icon: FileArchive },
+    { label: 'Running', value: recordings.filter(r => r.status === 'recording').length.toString(), icon: HardDrive },
+    { label: 'Total Steps', value: sessions?.reduce((acc, s) => acc + s.current_timestep, 0).toLocaleString() || '0', icon: Clock },
   ]
 
   return (
@@ -21,118 +31,127 @@ export default function Replay() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Replay</h1>
-          <p className="text-[var(--text-secondary)] mt-1">Episode recording and playback</p>
+          <p className="text-[var(--text-secondary)] mt-1">Session recordings and playback</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="btn btn-secondary flex items-center gap-2">
+          <button onClick={refetch} className="btn btn-secondary flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button className="btn btn-secondary flex items-center gap-2" disabled>
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button className="btn btn-primary flex items-center gap-2 bg-red-500 hover:bg-red-600">
-            <Circle className="w-4 h-4" />
-            Start Recording
-          </button>
         </div>
       </div>
+
+      {/* Loading */}
+      {loading && (
+        <div className="card flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-3" />
+          <span className="text-[var(--text-secondary)]">Loading sessions...</span>
+        </div>
+      )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {replayStats.map((stat) => {
-          const Icon = stat.icon
-          return (
-            <div key={stat.label} className="card">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 rounded-lg bg-blue-500/20">
-                  <Icon className="w-5 h-5 text-blue-400" />
+      {!loading && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {replayStats.map((stat) => {
+            const Icon = stat.icon
+            return (
+              <div key={stat.label} className="card">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded-lg bg-blue-500/20">
+                    <Icon className="w-5 h-5 text-blue-400" />
+                  </div>
+                </div>
+                <p className="text-xs text-[var(--text-secondary)]">{stat.label}</p>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">{stat.value}</p>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Sessions from Backend */}
+      {!loading && recordings.length > 0 && (
+        <div className="card">
+          <div className="p-4 bg-blue-500/10 border-b border-blue-500/20">
+            <div className="flex items-center gap-2 text-blue-400">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">Sessions from backend API</span>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] p-4 pb-2">Sessions</h3>
+          <div className="space-y-3 p-4 pt-2">
+            {recordings.map((recording) => (
+              <div key={recording.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
+                <div className="flex items-center gap-4">
+                  <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
+                    <Play className="w-5 h-5" />
+                  </button>
+                  <div>
+                    <p className="text-[var(--text-primary)] font-medium">{recording.name}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{recording.algorithm} • {recording.env}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-[var(--text-primary)]">{recording.steps.toLocaleString()} steps</p>
+                    <p className="text-xs text-[var(--text-secondary)]">Reward: {recording.reward.toFixed(2)}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    recording.status === 'recording' 
+                      ? 'bg-red-500/20 text-red-400' 
+                      : 'bg-green-500/20 text-green-400'
+                  }`}>
+                    {recording.status === 'recording' ? 'Running' : 'Completed'}
+                  </span>
                 </div>
               </div>
-              <p className="text-xs text-[var(--text-secondary)]">{stat.label}</p>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{stat.value}</p>
-            </div>
-          )
-        })}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No Data */}
+      {!loading && recordings.length === 0 && (
+        <div className="card">
+          <p className="text-[var(--text-secondary)] text-center py-12">
+            No sessions available. Start training from the Trainer page.
+          </p>
+        </div>
+      )}
+
+      {/* Backend Limitation */}
+      <div className="card bg-yellow-500/10 border border-yellow-500/20">
+        <h3 className="text-lg font-semibold text-yellow-400 mb-3">Replay Data</h3>
+        <div className="space-y-2 text-sm text-[var(--text-secondary)]">
+          <p>• <strong>Available:</strong> Session list from /sessions endpoint</p>
+          <p>• <strong>Not available:</strong> Episode recording, playback controls, compression, storage info</p>
+          <p className="text-xs mt-2 opacity-75">
+            Full replay system requires additional endpoints in the ZBGym backend
+          </p>
+        </div>
       </div>
 
-      {/* Recorder Status */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Recorder Status</h3>
-          <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            Recording
-          </span>
-        </div>
-        <div className="flex items-center gap-6">
+      {/* Demo Placeholder */}
+      <div className="card opacity-60">
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Playback Controls (Demo)</h3>
+        <div className="flex items-center justify-center gap-6 p-8">
           <div className="flex items-center gap-3">
             <button className="p-4 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
               <Pause className="w-6 h-6 text-[var(--text-primary)]" />
             </button>
             <div className="text-center">
-              <p className="text-3xl font-mono font-bold text-[var(--text-primary)]">00:15:30</p>
-              <p className="text-xs text-[var(--text-secondary)] mt-1">Recording Duration</p>
+              <p className="text-3xl font-mono font-bold text-[var(--text-primary)]">00:00:00</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-1">Demo Duration</p>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Recordings */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Recent Recordings</h3>
-        <div className="space-y-3">
-          {recordings.map((recording, idx) => (
-            <div key={idx} className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-4">
-                <button className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors">
-                  <Play className="w-5 h-5" />
-                </button>
-                <div>
-                  <p className="text-[var(--text-primary)] font-medium">{recording.name}</p>
-                  <p className="text-xs text-[var(--text-secondary)]">{recording.date}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="text-right">
-                  <p className="text-[var(--text-primary)]">{recording.size}</p>
-                  <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1 justify-end">
-                    <Clock className="w-3 h-3" />
-                    {recording.duration}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  recording.status === 'recording' 
-                    ? 'bg-red-500/20 text-red-400' 
-                    : 'bg-green-500/20 text-green-400'
-                }`}>
-                  {recording.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Timeline */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Timeline</h3>
-        <div className="relative h-24 bg-white/5 rounded-xl overflow-hidden">
-          <div className="absolute inset-0 flex">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <div 
-                key={i} 
-                className={`flex-1 border-r border-white/5 ${i % 5 === 0 ? 'border-r-white/20' : ''}`}
-              />
-            ))}
-          </div>
-          <div className="absolute inset-y-0 left-1/2 w-1 bg-blue-500 rounded-full animate-pulse">
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-blue-500 rounded-full" />
-          </div>
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-[var(--text-secondary)]">
-          <span>00:00</span>
-          <span>05:00</span>
-          <span>10:00</span>
-          <span>15:00</span>
-        </div>
+        <p className="text-center text-sm text-[var(--text-tertiary)]">
+          Playback controls require a replay endpoint in the backend
+        </p>
       </div>
     </div>
   )
