@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { 
   LayoutDashboard, Cpu, Heart, Package, Bot, Dumbbell, 
   RotateCcw, BarChart3, Terminal, FileText, Puzzle, 
-  Key, Settings, ChevronLeft, ChevronRight, Zap, Menu, X, 
+  Key, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, Menu, X, 
   Activity, Layers, Code2
 } from 'lucide-react'
 
@@ -54,10 +54,23 @@ const menuSections = [
 export default function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed }: SidebarProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
 
   const handleNavClick = (page: PageType) => {
     setCurrentPage(page)
     setMobileOpen(false)
+  }
+
+  const toggleSection = (title: string) => {
+    setCollapsedSections(prev => {
+      const next = new Set(prev)
+      if (next.has(title)) {
+        next.delete(title)
+      } else {
+        next.add(title)
+      }
+      return next
+    })
   }
 
   const renderSectionIcon = (title: string) => {
@@ -68,6 +81,80 @@ export default function Sidebar({ currentPage, setCurrentPage, collapsed, setCol
       case 'System': return <Settings className="w-3.5 h-3.5" />
       default: return null
     }
+  }
+
+  const renderSectionItems = (section: typeof menuSections[0], isMobile: boolean) => {
+    if (collapsedSections.has(section.title)) return null
+    return (
+      <>
+        {section.items.map((item) => {
+          const Icon = item.icon
+          const isActive = currentPage === item.id
+          
+          if (isMobile) {
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5
+                  transition-all duration-200
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-blue-400 border-l-2 border-blue-500' 
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'
+                  }
+                `}
+              >
+                <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-blue-400' : ''}`} />
+                <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
+                  {item.label}
+                </span>
+                {isActive && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500" />
+                )}
+              </button>
+            )
+          }
+          
+          return (
+            <div key={item.id} className="relative">
+              <button
+                onClick={() => setCurrentPage(item.id)}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
+                className={`
+                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+                  transition-all duration-200 group relative
+                  ${isActive 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-blue-400' 
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'
+                  }
+                `}
+              >
+                <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`} />
+                
+                {!collapsed && (
+                  <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
+                    {item.label}
+                  </span>
+                )}
+                
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-500 rounded-r-full" />
+                )}
+              </button>
+              
+              {/* Tooltip */}
+              {collapsed && hoveredItem === item.id && (
+                <div className="tooltip left-full ml-2 top-1/2 -translate-y-1/2">
+                  {item.label}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </>
+    )
   }
 
   return (
@@ -127,39 +214,21 @@ export default function Sidebar({ currentPage, setCurrentPage, collapsed, setCol
         <nav className="flex-1 py-4 px-3 overflow-y-auto">
           {menuSections.map((section) => (
             <div key={section.title} className="mb-4">
-              <div className="flex items-center gap-2 px-3 mb-2">
-                <span className="text-[var(--text-tertiary)]">{renderSectionIcon(section.title)}</span>
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                  {section.title}
-                </span>
-              </div>
-              {section.items.map((item) => {
-                const Icon = item.icon
-                const isActive = currentPage === item.id
-                
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    className={`
-                      w-full flex items-center gap-3 px-3 py-2.5 rounded-xl mb-0.5
-                      transition-all duration-200
-                      ${isActive 
-                        ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-blue-400 border-l-2 border-blue-500' 
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'
-                      }
-                    `}
-                  >
-                    <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-blue-400' : ''}`} />
-                    <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
-                      {item.label}
-                    </span>
-                    {isActive && (
-                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500" />
-                    )}
-                  </button>
-                )
-              })}
+              <button
+                onClick={() => toggleSection(section.title)}
+                className="w-full flex items-center justify-between px-3 mb-2 hover:bg-white/5 rounded-lg py-1 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-[var(--text-tertiary)]">{renderSectionIcon(section.title)}</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                    {section.title}
+                  </span>
+                </div>
+                <ChevronDown 
+                  className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${collapsedSections.has(section.title) ? '-rotate-90' : ''}`} 
+                />
+              </button>
+              {renderSectionItems(section, true)}
             </div>
           ))}
         </nav>
@@ -205,59 +274,27 @@ export default function Sidebar({ currentPage, setCurrentPage, collapsed, setCol
           {menuSections.map((section) => (
             <div key={section.title} className="mb-5">
               {!collapsed && (
-                <div className="flex items-center gap-2 px-3 mb-2">
-                  <span className="text-[var(--text-tertiary)]">{renderSectionIcon(section.title)}</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                    {section.title}
-                  </span>
-                </div>
+                <button
+                  onClick={() => toggleSection(section.title)}
+                  className="w-full flex items-center justify-between px-3 mb-2 hover:bg-white/5 rounded-lg py-1 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[var(--text-tertiary)]">{renderSectionIcon(section.title)}</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
+                      {section.title}
+                    </span>
+                  </div>
+                  <ChevronDown 
+                    className={`w-4 h-4 text-[var(--text-tertiary)] transition-transform duration-200 ${collapsedSections.has(section.title) ? '-rotate-90' : ''}`} 
+                  />
+                </button>
               )}
               {collapsed && (
                 <div className="section-divider mb-3" />
               )}
               
               <div className="space-y-0.5">
-                {section.items.map((item) => {
-                  const Icon = item.icon
-                  const isActive = currentPage === item.id
-                  
-                  return (
-                    <div key={item.id} className="relative">
-                      <button
-                        onClick={() => setCurrentPage(item.id)}
-                        onMouseEnter={() => setHoveredItem(item.id)}
-                        onMouseLeave={() => setHoveredItem(null)}
-                        className={`
-                          w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-                          transition-all duration-200 group relative
-                          ${isActive 
-                            ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-blue-400' 
-                            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-white/5'
-                          }
-                        `}
-                      >
-                        <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`} />
-                        
-                        {!collapsed && (
-                          <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
-                            {item.label}
-                          </span>
-                        )}
-                        
-                        {isActive && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-blue-500 rounded-r-full" />
-                        )}
-                      </button>
-                      
-                      {/* Tooltip */}
-                      {collapsed && hoveredItem === item.id && (
-                        <div className="tooltip left-full ml-2 top-1/2 -translate-y-1/2">
-                          {item.label}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+                {renderSectionItems(section, false)}
               </div>
             </div>
           ))}
