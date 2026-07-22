@@ -1,0 +1,27 @@
+// Dashboard Store exports
+
+export { ConnectionProvider, useConnection, useChannelUpdate } from './connection'
+export { FrameworkProvider, useFramework } from './framework'
+export { KernelProvider, useKernel } from './kernel'
+export { MetricsProvider, useMetrics } from './metrics'
+export { HealthProvider, useHealth } from './health'
+export { EventsProvider, useEvents } from './events'
+export { LogsProvider, useLogs } from './logs'
+export { ReplayProvider, useReplay } from './replay'
+export { TrainerProvider, useTrainer } from './trainer'
+export { PluginsProvider, usePlugins } from './plugins'
+export { AIProvider, useAI } from './ai'
+export { NotificationsProvider, useNotifications, ToastContainer } from './notifications'
+
+// Re-export types
+export type { FrameworkStatus } from './framework'
+export type { KernelStatus } from './kernel'
+export type { MetricsSnapshot } from './metrics'
+export type { HealthStatus } from './health'
+export type { FrameworkEvent } from './events'
+export type { LogEntry } from './logs'
+export type { ReplayStatus } from './replay'
+export type { TrainerStatus } from './trainer'
+export type { Plugin } from './plugins'
+export type { AIStatus, AIModel } from './ai'
+export type { Toast } from './notifications'

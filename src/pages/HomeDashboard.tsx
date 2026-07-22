@@ -1,113 +1,116 @@
 import { Activity, Cpu, HardDrive, MemoryStick, Bot, Clock, Zap, Gauge, TrendingUp, Loader2, AlertCircle } from 'lucide-react'
 import StatCard from '../components/StatCard'
-import { useStats, useSessions, useHealth } from '../services/zbgym'
+import ConnectionStatus from '../components/ConnectionStatus'
+import { 
+  useConnection, 
+  useFramework, 
+  useKernel, 
+  useMetrics, 
+  useHealth 
+} from '../store'
 
 export default function HomeDashboard() {
-  const { data: stats, loading: statsLoading, error: statsError } = useStats()
-  const { data: sessions } = useSessions()
-  const { data: health } = useHealth()
+  const { status: connectionStatus, latency, isHealthy } = useConnection()
+  const { status: framework, getUptimeFormatted } = useFramework()
+  const { status: kernel, getTickFormatted, getStageLabel } = useKernel()
+  const { current: metrics } = useMetrics()
+  const { status: health, getHealthColor } = useHealth()
 
-  const isFrameworkConnected = !statsError && health?.status === 'healthy'
-  const activeSessionsCount = sessions?.filter(s => s.status === 'running').length || 0
+  const isConnected = connectionStatus === 'connected' && isHealthy
+  const isFrameworkRunning = framework.running
 
   const statsCards = [
     { 
       title: 'Framework Status', 
-      value: isFrameworkConnected ? 'Running' : 'Disconnected', 
+      value: isFrameworkRunning ? 'Running' : 'Stopped', 
       icon: Activity, 
-      color: (isFrameworkConnected ? 'green' : 'red') as 'green' | 'red',
-      subtitle: isFrameworkConnected ? 'All systems operational' : 'Cannot connect to framework'
+      color: (isFrameworkRunning ? 'green' : 'red') as 'green' | 'red',
+      subtitle: `${framework.version} • Uptime: ${getUptimeFormatted()}`
     },
     { 
       title: 'Kernel Status', 
-      value: isFrameworkConnected ? 'Active' : 'Offline', 
+      value: kernel.running ? getStageLabel() : 'Offline', 
       icon: Cpu, 
-      color: (isFrameworkConnected ? 'blue' : 'red') as 'blue' | 'red',
-      subtitle: stats ? `${stats.total_sessions} total sessions` : 'No data'
+      color: (kernel.running ? 'blue' : 'red') as 'blue' | 'red',
+      subtitle: `Tick: ${getTickFormatted()} • ${kernel.tick_rate.toFixed(1)} tps`
     },
     { 
       title: 'Sessions', 
-      value: stats?.total_sessions?.toString() || '0', 
+      value: framework.total_sessions.toString(), 
       icon: TrendingUp, 
       color: 'green' as const,
-      subtitle: `${activeSessionsCount} active`
+      subtitle: `${framework.active_sessions} active`
     },
     { 
-      title: 'Models', 
-      value: stats?.total_models?.toString() || '0', 
-      icon: MemoryStick, 
-      color: 'purple' as const,
-      subtitle: 'Registered models'
+      title: 'Health Score', 
+      value: `${health.health_score}%`, 
+      icon: Activity, 
+      color: (getHealthColor() as 'green' | 'yellow' | 'red') as 'green' | 'yellow' | 'red',
+      subtitle: health.warnings.length + health.errors.length > 0 
+        ? `${health.errors.length} errors, ${health.warnings.length} warnings` 
+        : 'All systems healthy'
     },
-    // GPU/CPU/RAM/VRAM - No backend data available, show placeholder
     { 
       title: 'GPU Usage', 
-      value: '-', 
+      value: `${metrics.gpu_usage_percent.toFixed(0)}%`, 
       icon: Zap, 
       color: 'purple' as const,
-      subtitle: 'No data from framework'
-    },
-    { 
-      title: 'VRAM', 
-      value: '-', 
-      icon: HardDrive, 
-      color: 'blue' as const,
-      subtitle: 'No data from framework'
+      subtitle: 'VRAM: ' + (metrics.vram_usage_mb > 1000 
+        ? `${(metrics.vram_usage_mb/1000).toFixed(1)}GB` 
+        : `${metrics.vram_usage_mb.toFixed(0)}MB`)
     },
     { 
       title: 'CPU', 
-      value: '-', 
+      value: `${metrics.cpu_usage_percent.toFixed(0)}%`, 
       icon: Gauge, 
       color: 'yellow' as const,
-      subtitle: 'No data from framework'
+      subtitle: `${metrics.tick_time_ms.toFixed(2)}ms tick`
     },
     { 
       title: 'RAM', 
-      value: '-', 
+      value: metrics.memory_usage_mb > 1000 
+        ? `${(metrics.memory_usage_mb/1000).toFixed(1)}GB` 
+        : `${metrics.memory_usage_mb.toFixed(0)}MB`, 
       icon: MemoryStick, 
       color: 'blue' as const,
-      subtitle: 'No data from framework'
-    },
-    { 
-      title: 'AI Agents', 
-      value: stats?.total_models?.toString() || '0', 
-      icon: Bot, 
-      color: 'purple' as const,
-      subtitle: 'Available models'
-    },
-    { 
-      title: 'Active Sessions', 
-      value: activeSessionsCount.toString(), 
-      icon: Clock, 
-      color: 'blue' as const,
-      subtitle: 'Currently running'
-    },
-    { 
-      title: 'TPS', 
-      value: '-', 
-      icon: Gauge, 
-      color: 'green' as const,
-      subtitle: 'No data from framework'
+      subtitle: 'System memory'
     },
     { 
       title: 'FPS', 
-      value: '-', 
+      value: metrics.fps.toFixed(0), 
       icon: Activity, 
       color: 'green' as const,
-      subtitle: 'No data from framework'
+      subtitle: 'Framework FPS'
+    },
+    { 
+      title: 'Episodes', 
+      value: metrics.episode_count.toLocaleString(), 
+      icon: Bot, 
+      color: 'purple' as const,
+      subtitle: 'Total completed'
+    },
+    { 
+      title: 'Reward Rate', 
+      value: metrics.reward_rate.toFixed(2), 
+      icon: TrendingUp, 
+      color: 'green' as const,
+      subtitle: 'Current reward/s'
+    },
+    { 
+      title: 'Inference', 
+      value: `${metrics.inference_time_ms.toFixed(0)}ms`, 
+      icon: Zap, 
+      color: 'blue' as const,
+      subtitle: 'Avg inference time'
+    },
+    { 
+      title: 'Connection', 
+      value: connectionStatus === 'connected' ? `${latency}ms` : connectionStatus, 
+      icon: Activity, 
+      color: (connectionStatus === 'connected' ? 'green' : 'red') as 'green' | 'red',
+      subtitle: 'Gateway latency'
     },
   ]
-
-  if (statsLoading) {
-    return (
-      <div className="space-y-4 md:space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-400" />
-          <span className="ml-3 text-[var(--text-secondary)]">Connecting to framework...</span>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -117,31 +120,8 @@ export default function HomeDashboard() {
           <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">Dashboard</h1>
           <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">Monitor your framework status in real-time</p>
         </div>
-        <div className={`px-3 sm:px-4 py-2 rounded-xl border flex items-center gap-2 ${
-          isFrameworkConnected 
-            ? 'bg-green-500/20 border-green-500/30' 
-            : 'bg-red-500/20 border-red-500/30'
-        }`}>
-          <span className={`status-dot ${isFrameworkConnected ? 'status-healthy' : 'status-error'} ${isFrameworkConnected ? 'animate-pulse' : ''}`} />
-          <span className={`text-xs sm:text-sm font-medium ${isFrameworkConnected ? 'text-green-400' : 'text-red-400'}`}>
-            {isFrameworkConnected ? 'Framework Connected' : 'Disconnected'}
-          </span>
-        </div>
+        <ConnectionStatus />
       </div>
-
-      {/* Connection Error */}
-      {statsError && (
-        <div className="card bg-red-500/10 border border-red-500/20 p-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400" />
-            <div>
-              <p className="text-red-400 font-medium">Cannot Connect to Framework</p>
-              <p className="text-[var(--text-secondary)] text-sm">{statsError}</p>
-              <p className="text-[var(--text-tertiary)] text-xs mt-1">Make sure ZBGym server is running at http://localhost:8080</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Stats Grid - Mobile optimized */}
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 sm:gap-4">
@@ -158,53 +138,52 @@ export default function HomeDashboard() {
 
       {/* Quick Overview - Mobile optimized */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        {/* Recent Sessions */}
+        {/* Kernel Status */}
         <div className="card">
-          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] mb-3 sm:mb-4">Recent Sessions</h3>
-          {sessions && sessions.length > 0 ? (
-            <div className="space-y-2 sm:space-y-3">
-              {sessions.slice(0, 5).map((session) => (
-                <div key={session.id} className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                    session.status === 'running' ? 'bg-green-500 animate-pulse' :
-                    session.status === 'completed' ? 'bg-blue-500' :
-                    session.status === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                  }`} />
-                  <span className="flex-1 text-xs sm:text-sm text-[var(--text-primary)] truncate">
-                    {session.algorithm || 'Session'} #{session.id}
-                  </span>
-                  <span className="text-xs sm:text-sm text-[var(--text-secondary)]">
-                    {session.current_timestep.toLocaleString()} steps
-                  </span>
-                </div>
-              ))}
+          <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] mb-3 sm:mb-4">Kernel Status</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Status</span>
+              <span className={`font-medium ${kernel.running ? 'text-green-400' : 'text-gray-400'}`}>
+                {kernel.running ? 'Running' : 'Stopped'}
+              </span>
             </div>
-          ) : (
-            <p className="text-[var(--text-secondary)] text-sm">No sessions available from framework</p>
-          )}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Current Tick</span>
+              <span className="font-mono text-[var(--text-primary)]">{getTickFormatted()}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Stage</span>
+              <span className="text-[var(--text-primary)]">{getStageLabel()}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Tick Rate</span>
+              <span className="font-mono text-[var(--text-primary)]">{kernel.tick_rate.toFixed(2)} tps</span>
+            </div>
+          </div>
         </div>
 
         {/* Framework Stats */}
         <div className="card">
           <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] mb-3 sm:mb-4">Framework Statistics</h3>
-          {stats ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <span className="text-[var(--text-secondary)]">Total Sessions</span>
-                <span className="text-[var(--text-primary)] font-semibold">{stats.total_sessions}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <span className="text-[var(--text-secondary)]">Active Sessions</span>
-                <span className="text-green-400 font-semibold">{stats.active_sessions}</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <span className="text-[var(--text-secondary)]">Total Models</span>
-                <span className="text-purple-400 font-semibold">{stats.total_models}</span>
-              </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Version</span>
+              <span className="text-[var(--text-primary)] font-semibold">{framework.version}</span>
             </div>
-          ) : (
-            <p className="text-[var(--text-secondary)] text-sm">No statistics available</p>
-          )}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Total Sessions</span>
+              <span className="text-[var(--text-primary)] font-semibold">{framework.total_sessions}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Active Sessions</span>
+              <span className="text-green-400 font-semibold">{framework.active_sessions}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Uptime</span>
+              <span className="font-mono text-[var(--text-primary)]">{getUptimeFormatted()}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

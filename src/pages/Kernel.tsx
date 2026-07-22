@@ -1,76 +1,12 @@
-import { Clock, Activity, Package, Heart, Gauge, Zap, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
-import { useHealth, useStats, useSessions } from '../services/zbgym'
+import { Clock, Activity, Package, Heart, Gauge, Zap, Cpu, Loader2 } from 'lucide-react'
+import { useKernel, useFramework, useMetrics, useHealth, useConnection } from '../store'
 
 export default function Kernel() {
-  const { data: health, loading: healthLoading } = useHealth()
-  const { data: stats, loading: statsLoading, refetch: refetchStats } = useStats()
-  const { data: sessions, loading: sessionsLoading } = useSessions()
-
-  const isLoading = healthLoading || statsLoading || sessionsLoading
-
-  // Calculate kernel metrics from available data
-  const activeSessions = sessions?.filter(s => s.status === 'running') || []
-  const completedSessions = sessions?.filter(s => s.status === 'completed') || []
-  const totalSteps = sessions?.reduce((acc, s) => acc + (s.current_timestep || 0), 0) || 0
-
-  const kernelCards = [
-    { 
-      title: 'Health Status', 
-      value: health?.status === 'healthy' ? 'Healthy' : 'Unhealthy', 
-      icon: Heart,
-      color: health?.status === 'healthy' ? 'green' : 'red',
-      description: 'Framework connection status'
-    },
-    { 
-      title: 'Total Sessions', 
-      value: stats?.total_sessions?.toString() || '0', 
-      icon: Activity,
-      color: 'blue',
-      description: 'All training sessions'
-    },
-    { 
-      title: 'Active Sessions', 
-      value: stats?.active_sessions?.toString() || '0', 
-      icon: Zap,
-      color: 'purple',
-      description: 'Currently running'
-    },
-    { 
-      title: 'Total Models', 
-      value: stats?.total_models?.toString() || '0', 
-      icon: Package,
-      color: 'green',
-      description: 'Trained models'
-    },
-    { 
-      title: 'Completed', 
-      value: completedSessions.length.toString(), 
-      icon: Activity,
-      color: 'green',
-      description: 'Finished sessions'
-    },
-    { 
-      title: 'Total Steps', 
-      value: totalSteps.toLocaleString(), 
-      icon: Gauge,
-      color: 'blue',
-      description: 'Timesteps processed'
-    },
-    { 
-      title: 'Latest Reward', 
-      value: sessions?.[0]?.mean_reward?.toFixed(2) || '-', 
-      icon: Heart,
-      color: 'purple',
-      description: 'Last session reward'
-    },
-    { 
-      title: 'Framework Status', 
-      value: health?.status === 'healthy' ? 'Online' : 'Offline', 
-      icon: Clock,
-      color: health?.status === 'healthy' ? 'green' : 'yellow',
-      description: 'Backend connection'
-    },
-  ]
+  const { status: kernel, getTickFormatted, getStageLabel } = useKernel()
+  const { status: framework } = useFramework()
+  const { current: metrics } = useMetrics()
+  const { status: health, getHealthLabel } = useHealth()
+  const { latency } = useConnection()
 
   const colorMap = {
     blue: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
@@ -80,43 +16,80 @@ export default function Kernel() {
     purple: { bg: 'bg-purple-500/20', text: 'text-purple-400' },
   }
 
+  const kernelCards = [
+    { 
+      title: 'Kernel Status', 
+      value: kernel.running ? 'Running' : 'Stopped', 
+      icon: Cpu,
+      color: kernel.running ? 'green' : 'red',
+      description: kernel.running ? `Stage: ${getStageLabel()}` : 'Kernel is not running'
+    },
+    { 
+      title: 'Current Tick', 
+      value: getTickFormatted(), 
+      icon: Activity,
+      color: 'blue',
+      description: `${kernel.tick_rate.toFixed(2)} ticks/sec`
+    },
+    { 
+      title: 'Scheduler Queue', 
+      value: kernel.scheduler_queue_size.toString(), 
+      icon: Package,
+      color: 'purple',
+      description: 'Pending operations'
+    },
+    { 
+      title: 'Tick Duration', 
+      value: `${kernel.tick_duration_ms.toFixed(2)}ms`, 
+      icon: Clock,
+      color: 'green',
+      description: 'Average tick time'
+    },
+    { 
+      title: 'Runtime Status', 
+      value: kernel.runtime_status, 
+      icon: Zap,
+      color: 'blue',
+      description: 'Current runtime state'
+    },
+    { 
+      title: 'Health Score', 
+      value: `${health.health_score}%`, 
+      icon: Heart,
+      color: getHealthLabel() === 'Healthy' ? 'green' : getHealthLabel() === 'Degraded' ? 'yellow' : 'red',
+      description: getHealthLabel()
+    },
+    { 
+      title: 'Framework Version', 
+      value: framework.version, 
+      icon: Package,
+      color: 'blue',
+      description: 'Framework version'
+    },
+    { 
+      title: 'Latency', 
+      value: `${latency}ms`, 
+      icon: Gauge,
+      color: latency < 100 ? 'green' : latency < 500 ? 'yellow' : 'red',
+      description: 'Gateway connection'
+    },
+  ]
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Kernel</h1>
-          <p className="text-[var(--text-secondary)] mt-1">Core kernel status and metrics</p>
+          <p className="text-[var(--text-secondary)] mt-1">Real-time kernel status and metrics</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={refetchStats} className="btn btn-secondary flex items-center gap-2">
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-          <span className={`status-dot ${health?.status === 'healthy' ? 'status-healthy' : 'status-warning'}`} />
-          <span className={`text-sm font-medium ${health?.status === 'healthy' ? 'text-green-400' : 'text-yellow-400'}`}>
-            {health?.status === 'healthy' ? 'Framework Online' : 'Framework Offline'}
+          <span className={`status-dot ${kernel.running ? 'status-healthy' : 'status-warning'}`} />
+          <span className={`text-sm font-medium ${kernel.running ? 'text-green-400' : 'text-yellow-400'}`}>
+            {kernel.running ? 'Kernel Active' : 'Kernel Inactive'}
           </span>
         </div>
       </div>
-
-      {/* Error/Loading State */}
-      {isLoading && (
-        <div className="card flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-3" />
-          <span className="text-[var(--text-secondary)]">Loading kernel metrics...</span>
-        </div>
-      )}
-
-      {/* No Data Message */}
-      {!isLoading && health?.status !== 'healthy' && (
-        <div className="card bg-yellow-500/10 border border-yellow-500/20 p-4">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-400" />
-            <p className="text-yellow-400">Cannot connect to ZBGym backend. Make sure the backend is running on port 8080.</p>
-          </div>
-        </div>
-      )}
 
       {/* Kernel Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -138,100 +111,111 @@ export default function Kernel() {
         })}
       </div>
 
-      {/* Backend Limitation Notice */}
-      <div className="card bg-blue-500/10 border border-blue-500/20">
-        <h3 className="text-lg font-semibold text-blue-400 mb-3">Kernel Data from Backend</h3>
-        <div className="space-y-2 text-sm text-[var(--text-secondary)]">
-          <p>• <strong>Available:</strong> Health status, session counts, model counts, latest reward</p>
-          <p>• <strong>Not available:</strong> Runtime, tick count, TPS (ticks per second), event dispatcher, module manager</p>
-          <p className="text-xs mt-2 opacity-75">
-            These metrics require additional endpoints in the ZBGym backend (e.g., /kernel/status, /kernel/metrics)
-          </p>
-        </div>
-      </div>
-
-      {/* Active Sessions */}
-      {activeSessions.length > 0 && (
-        <div className="card">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Active Training Sessions</h3>
-          <div className="space-y-3">
-            {activeSessions.map((session) => (
-              <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">Session #{session.id}</p>
-                    <p className="text-xs text-[var(--text-secondary)]">{session.algorithm} - {session.env_id}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[var(--text-primary)] font-mono">{session.current_timestep.toLocaleString()} steps</p>
-                  <p className="text-xs text-[var(--text-secondary)]">Reward: {session.mean_reward.toFixed(2)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* System Information - Demo */}
+      {/* Detailed Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card opacity-60">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">System Information</h3>
-          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-4">
-            <p className="text-sm text-[var(--text-secondary)]">
-              System info (version, architecture) requires additional backend endpoint.
-            </p>
-          </div>
-          <div className="space-y-3">
-            {[
-              { label: 'Version', value: 'N/A' },
-              { label: 'Build', value: 'N/A' },
-              { label: 'Architecture', value: 'N/A' },
-              { label: 'Python Version', value: 'N/A' },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <span className="text-[var(--text-secondary)]">{item.label}</span>
-                <span className="text-[var(--text-primary)] font-mono">{item.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="card opacity-60">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Performance</h3>
-          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-4">
-            <p className="text-sm text-[var(--text-secondary)]">
-              Performance metrics (CPU, memory, GPU) require additional backend endpoint.
-            </p>
-          </div>
+        {/* Kernel Details */}
+        <div className="card">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Kernel Details</h3>
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">CPU Time</span>
-                <span className="text-[var(--text-primary)]">N/A</span>
+                <span className="text-[var(--text-secondary)]">Running</span>
+                <span className={`font-medium ${kernel.running ? 'text-green-400' : 'text-gray-400'}`}>
+                  {kernel.running ? 'Yes' : 'No'}
+                </span>
               </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-0 bg-blue-500 rounded-full" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">Memory Usage</span>
-                <span className="text-[var(--text-primary)]">N/A</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-0 bg-purple-500 rounded-full" />
+              <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                <div className={`h-full ${kernel.running ? 'bg-green-500' : 'bg-gray-500'} rounded-full transition-all`} style={{ width: kernel.running ? '100%' : '0%' }} />
               </div>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--text-secondary)]">GPU Utilization</span>
-                <span className="text-[var(--text-primary)]">N/A</span>
-              </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-0 bg-green-500 rounded-full" />
-              </div>
+
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Current Stage</span>
+              <span className="text-[var(--text-primary)] font-medium">{getStageLabel()}</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Tick Rate</span>
+              <span className="text-[var(--text-primary)] font-mono">{kernel.tick_rate.toFixed(2)} tps</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Tick Duration</span>
+              <span className="text-[var(--text-primary)] font-mono">{kernel.tick_duration_ms.toFixed(2)} ms</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Scheduler Queue</span>
+              <span className="text-[var(--text-primary)] font-mono">{kernel.scheduler_queue_size}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Framework Status */}
+        <div className="card">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Framework Status</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Framework</span>
+              <span className={`font-medium ${framework.running ? 'text-green-400' : 'text-gray-400'}`}>
+                {framework.running ? 'Running' : 'Stopped'}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Version</span>
+              <span className="text-[var(--text-primary)] font-mono">{framework.version}</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Type</span>
+              <span className="text-[var(--text-primary)]">{framework.framework_type}</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">PID</span>
+              <span className="text-[var(--text-primary)] font-mono">{framework.pid || 'N/A'}</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <span className="text-[var(--text-secondary)]">Total Sessions</span>
+              <span className="text-[var(--text-primary)]">{framework.total_sessions}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Metrics */}
+      <div className="card">
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Performance Metrics</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--text-secondary)]">FPS</span>
+              <span className="text-[var(--text-primary)] font-mono">{metrics.fps.toFixed(0)}</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.min(metrics.fps, 100)}%` }} />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--text-secondary)]">CPU</span>
+              <span className="text-[var(--text-primary)] font-mono">{metrics.cpu_usage_percent.toFixed(0)}%</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${metrics.cpu_usage_percent}%` }} />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--text-secondary)]">Memory</span>
+              <span className="text-[var(--text-primary)] font-mono">{metrics.memory_usage_mb.toFixed(0)} MB</span>
+            </div>
+            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${Math.min(metrics.memory_usage_mb / 10, 100)}%` }} />
             </div>
           </div>
         </div>

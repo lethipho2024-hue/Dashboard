@@ -1,126 +1,240 @@
+import { Heart, AlertTriangle, AlertCircle, Thermometer, Activity } from 'lucide-react'
+import { useHealth } from '../store'
 import HealthRing from '../components/HealthRing'
-import { useHealth } from '../services/zbgym'
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react'
 
 export default function FrameworkHealth() {
-  const { data: health, loading, refetch } = useHealth()
+  const { 
+    status, 
+    stats, 
+    getHealthColor, 
+    getHealthLabel,
+    hasWarnings,
+    hasErrors,
+    getHealthChartData
+  } = useHealth()
 
-  const isHealthy = health?.status === 'healthy'
-  const healthPercentage = isHealthy ? 100 : 0
+  const healthCards = [
+    { 
+      title: 'Health Score', 
+      value: `${status.health_score}%`, 
+      icon: Heart,
+      color: getHealthColor(),
+      description: getHealthLabel()
+    },
+    { 
+      title: 'Healthy Modules', 
+      value: stats.healthy_modules.toString(), 
+      icon: Activity,
+      color: 'green',
+      description: 'Modules running normally'
+    },
+    { 
+      title: 'Warning Modules', 
+      value: stats.warning_modules.toString(), 
+      icon: AlertTriangle,
+      color: 'yellow',
+      description: 'Modules need attention'
+    },
+    { 
+      title: 'Critical Modules', 
+      value: stats.error_modules.toString(), 
+      icon: AlertCircle,
+      color: 'red',
+      description: 'Modules with errors'
+    },
+  ]
+
+  const colorMap: Record<string, string> = {
+    green: 'text-green-400',
+    yellow: 'text-yellow-400',
+    red: 'text-red-400',
+    blue: 'text-blue-400',
+    purple: 'text-purple-400',
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--text-primary)]">Framework Health</h1>
-          <p className="text-[var(--text-secondary)] mt-1">Monitor the health status of all framework components</p>
+          <p className="text-[var(--text-secondary)] mt-1">Real-time system health monitoring</p>
         </div>
-        <button onClick={refetch} className="btn btn-secondary flex items-center gap-2">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="card flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-3" />
-          <span className="text-[var(--text-secondary)]">Checking framework health...</span>
-        </div>
-      )}
-
-      {/* Main Content */}
-      {!loading && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Health Ring */}
-          <div className="card flex flex-col items-center justify-center py-12">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-8">Overall Health</h3>
-            <HealthRing percentage={healthPercentage} status={isHealthy ? 'healthy' : 'error'} size={240} />
-            <div className="mt-8 text-center">
-              <p className={`text-2xl font-bold ${isHealthy ? 'text-green-400' : 'text-red-400'}`}>
-                {isHealthy ? 'Healthy' : 'Unhealthy'}
-              </p>
-              <p className="text-sm text-[var(--text-secondary)] mt-2">
-                {isHealthy ? 'All systems operational' : 'Framework connection issue'}
-              </p>
-            </div>
-          </div>
-
-          {/* Backend Health Info */}
-          <div className="card">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Backend Connection</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-                <div className="flex items-center gap-3">
-                  <span className={`status-dot ${isHealthy ? 'status-healthy' : 'status-error'}`} />
-                  <span className="text-[var(--text-primary)] font-medium">API Server</span>
-                </div>
-                <span className={`text-sm font-medium ${isHealthy ? 'text-green-400' : 'text-red-400'}`}>
-                  {isHealthy ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 rounded-xl bg-white/5">
-                <div className="flex items-center gap-3">
-                  <span className={`status-dot ${isHealthy ? 'status-healthy' : 'status-warning'}`} />
-                  <span className="text-[var(--text-primary)] font-medium">Status Endpoint</span>
-                </div>
-                <span className={`text-sm font-medium ${isHealthy ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {isHealthy ? 'Responding' : 'No Response'}
-                </span>
-              </div>
-            </div>
-
-            {/* No Module Health Endpoint */}
-            <div className="mt-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-              <div className="flex items-center gap-2 text-yellow-400 mb-2">
-                <AlertCircle className="w-4 h-4" />
-                <span className="font-medium">Module Health Not Available</span>
-              </div>
-              <p className="text-sm text-[var(--text-secondary)]">
-                Individual module health monitoring requires a dedicated endpoint in the ZBGym backend (e.g., /health/modules).
-                Currently only the overall /health endpoint is available.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Backend Limitation */}
-      <div className="card bg-blue-500/10 border border-blue-500/20">
-        <h3 className="text-lg font-semibold text-blue-400 mb-3">Available Health Data</h3>
-        <div className="space-y-2 text-sm text-[var(--text-secondary)]">
-          <p>• <strong>Available:</strong> Overall framework health status (healthy/unhealthy)</p>
-          <p>• <strong>Not available:</strong> Individual module status, uptime, response time, error rate</p>
-          <p className="text-xs mt-2 opacity-75">
-            These metrics require additional endpoints in the ZBGym backend
-          </p>
+        <div className={`px-4 py-2 rounded-xl border flex items-center gap-2 ${
+          status.health_score >= 80 
+            ? 'bg-green-500/20 border-green-500/30' 
+            : status.health_score >= 50 
+            ? 'bg-yellow-500/20 border-yellow-500/30'
+            : 'bg-red-500/20 border-red-500/30'
+        }`}>
+          <span className={`status-dot ${
+            status.health_score >= 80 
+              ? 'status-healthy' 
+              : status.health_score >= 50 
+              ? 'status-warning'
+              : 'status-error'
+          }`} />
+          <span className={`text-sm font-medium ${
+            status.health_score >= 80 
+              ? 'text-green-400' 
+              : status.health_score >= 50 
+              ? 'text-yellow-400'
+              : 'text-red-400'
+          }`}>
+            {getHealthLabel()}
+          </span>
         </div>
       </div>
 
-      {/* Placeholder Module List - Demo */}
-      {!loading && (
-        <div className="card opacity-60">
-          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Module Status (Demo)</h3>
-          <p className="text-sm text-[var(--text-secondary)] mb-4">
-            Individual module status requires backend endpoint. Showing demo data:
-          </p>
-          <div className="space-y-3">
-            {[
-              { name: 'Training Engine', status: 'healthy' },
-              { name: 'Model Registry', status: 'healthy' },
-              { name: 'Environment Manager', status: 'healthy' },
-              { name: 'Logger Service', status: 'healthy' },
-              { name: 'Metrics Collector', status: 'warning' },
-            ].map((module, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-3">
-                  <span className={`status-dot ${module.status === 'healthy' ? 'status-healthy' : 'status-warning'}`} />
-                  <span className="text-[var(--text-primary)] font-medium">{module.name}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {healthCards.map((card) => {
+          const Icon = card.icon
+          const colorClass = colorMap[card.color] || colorMap.blue
+          return (
+            <div key={card.title} className="card">
+              <div className="flex items-center gap-3 mb-3">
+                <div className={`p-3 rounded-xl ${
+                  card.color === 'green' ? 'bg-green-500/20' :
+                  card.color === 'yellow' ? 'bg-yellow-500/20' :
+                  card.color === 'red' ? 'bg-red-500/20' :
+                  'bg-blue-500/20'
+                }`}>
+                  <Icon className={`w-6 h-6 ${colorClass}`} />
                 </div>
-                <span className={`text-sm font-medium ${module.status === 'healthy' ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {module.status === 'healthy' ? 'Healthy' : 'Warning'}
+              </div>
+              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">{card.title}</p>
+              <p className={`text-3xl font-bold mt-1 ${colorClass}`}>{card.value}</p>
+              <p className="text-sm text-[var(--text-tertiary)] mt-2">{card.description}</p>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="card">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Health Overview</h3>
+          <div className="flex items-center justify-center py-8">
+            <div className="relative">
+              <HealthRing score={status.health_score} size={200} strokeWidth={12} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-4xl font-bold ${colorMap[getHealthColor()]}`}>
+                  {status.health_score}%
+                </span>
+                <span className="text-xs text-[var(--text-secondary)]">Health Score</span>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-400">{stats.healthy_modules}</p>
+              <p className="text-xs text-[var(--text-secondary)]">Healthy</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-yellow-400">{stats.warning_modules}</p>
+              <p className="text-xs text-[var(--text-secondary)]">Warning</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-red-400">{stats.error_modules}</p>
+              <p className="text-xs text-[var(--text-secondary)]">Error</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">System Status</h3>
+          <div className="space-y-4">
+            {status.temperature_celsius && (
+              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                <div className="flex items-center gap-3">
+                  <Thermometer className="w-5 h-5 text-blue-400" />
+                  <span className="text-[var(--text-secondary)]">Temperature</span>
+                </div>
+                <span className="text-[var(--text-primary)] font-mono">
+                  {status.temperature_celsius}°C
+                </span>
+              </div>
+            )}
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                <span className="text-[var(--text-secondary)]">Warnings</span>
+              </div>
+              <span className={`font-mono ${stats.warning_count > 0 ? 'text-yellow-400' : 'text-[var(--text-primary)]'}`}>
+                {stats.warning_count}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+                <span className="text-[var(--text-secondary)]">Errors</span>
+              </div>
+              <span className={`font-mono ${stats.error_count > 0 ? 'text-red-400' : 'text-[var(--text-primary)]'}`}>
+                {stats.error_count}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-orange-400" />
+                <span className="text-[var(--text-secondary)]">Crash Count</span>
+              </div>
+              <span className={`font-mono ${status.crash_count > 0 ? 'text-orange-400' : 'text-[var(--text-primary)]'}`}>
+                {status.crash_count}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {status.warnings.length > 0 && (
+        <div className="card bg-yellow-500/10 border-yellow-500/20">
+          <h3 className="text-lg font-semibold text-yellow-400 mb-4">Warnings</h3>
+          <div className="space-y-2">
+            {status.warnings.map((warning, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10">
+                <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+                <span className="text-sm text-[var(--text-primary)]">{warning}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {status.errors.length > 0 && (
+        <div className="card bg-red-500/10 border-red-500/20">
+          <h3 className="text-lg font-semibold text-red-400 mb-4">Errors</h3>
+          <div className="space-y-2">
+            {status.errors.map((error, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10">
+                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <span className="text-sm text-[var(--text-primary)]">{error}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {Object.keys(status.module_status).length > 0 && (
+        <div className="card">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Module Status</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(status.module_status).map(([module, moduleStatus]) => (
+              <div 
+                key={module} 
+                className={`flex items-center justify-between p-3 rounded-lg ${
+                  moduleStatus === 'healthy' ? 'bg-green-500/10' :
+                  moduleStatus === 'warning' ? 'bg-yellow-500/10' :
+                  'bg-red-500/10'
+                }`}
+              >
+                <span className="text-sm text-[var(--text-primary)] font-medium">{module}</span>
+                <span className={`text-xs font-medium px-2 py-1 rounded ${
+                  moduleStatus === 'healthy' ? 'bg-green-500/20 text-green-400' :
+                  moduleStatus === 'warning' ? 'bg-yellow-500/20 text-yellow-400' :
+                  'bg-red-500/20 text-red-400'
+                }`}>
+                  {moduleStatus}
                 </span>
               </div>
             ))}
