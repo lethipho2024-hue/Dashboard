@@ -5,9 +5,9 @@ export default function RightPanel() {
   const [isExpanded, setIsExpanded] = useState(false)
   
   const stats = [
-    { label: 'CPU', value: '67%', icon: Cpu, color: 'blue' },
-    { label: 'GPU', value: '82%', icon: Zap, color: 'purple' },
-    { label: 'VRAM', value: '6.2GB', icon: HardDrive, color: 'green' },
+    { label: 'CPU', value: '67%', icon: Cpu, color: 'blue', width: 67 },
+    { label: 'GPU', value: '82%', icon: Zap, color: 'purple', width: 82 },
+    { label: 'VRAM', value: '6.2GB', icon: HardDrive, color: 'green', width: 62 },
   ]
 
   const warnings = [
@@ -21,7 +21,7 @@ export default function RightPanel() {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="fixed bottom-4 right-4 z-40 p-3 rounded-full bg-blue-500 shadow-lg lg:hidden"
+        className="fixed bottom-4 right-4 z-40 p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 lg:hidden"
       >
         {isExpanded ? (
           <XCircle className="w-6 h-6 text-white" />
@@ -47,7 +47,7 @@ export default function RightPanel() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-green-400" />
-                <span className="text-sm font-semibold text-text-primary">Status</span>
+                <span className="text-sm font-semibold text-[var(--text-primary)]">Status</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="status-dot status-healthy" />
@@ -66,9 +66,9 @@ export default function RightPanel() {
                         stat.color === 'blue' ? 'text-blue-400' :
                         stat.color === 'purple' ? 'text-purple-400' : 'text-green-400'
                       }`} />
-                      <span className="text-xs text-text-secondary">{stat.label}</span>
+                      <span className="text-xs text-[var(--text-secondary)]">{stat.label}</span>
                     </div>
-                    <p className="text-xl font-bold text-text-primary">{stat.value}</p>
+                    <p className="text-xl font-bold text-[var(--text-primary)]">{stat.value}</p>
                   </div>
                 )
               })}
@@ -81,7 +81,7 @@ export default function RightPanel() {
                   {item.type === 'success' && <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />}
                   {item.type === 'warning' && <AlertTriangle className="w-4 h-4 text-yellow-400 flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-text-primary truncate">{item.message}</p>
+                    <p className="text-sm text-[var(--text-primary)] truncate">{item.message}</p>
                   </div>
                 </div>
               ))}
@@ -90,29 +90,35 @@ export default function RightPanel() {
         </div>
       </aside>
 
-      {/* Desktop Panel */}
-      <aside className="hidden lg:block w-72 bg-bg-secondary border-l border-white/5 p-4 overflow-y-auto">
-        <div className="space-y-6">
-          {/* Framework Status */}
-          <div className="card">
-            <div className="flex items-center gap-2 mb-4">
-              <Activity className="w-4 h-4 text-green-400" />
-              <h3 className="text-sm font-semibold text-text-primary">Framework Status</h3>
+      {/* Desktop Panel - Premium Floating Panel */}
+      <aside className="hidden lg:flex flex-col w-80 bg-[var(--bg-secondary)] border-l border-white/5 overflow-hidden">
+        {/* Header */}
+        <div className="p-5 border-b border-white/5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center glow-blue">
+                <Activity className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[var(--text-primary)]">System Status</h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="status-dot status-healthy" />
+                  <span className="text-xs text-[var(--accent-green)] font-medium">All Systems Online</span>
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="status-dot status-healthy" />
-              <span className="text-green-400 text-sm font-medium">Running</span>
-            </div>
-            <p className="text-xs text-text-secondary mt-2">Tick: 12,847</p>
           </div>
+        </div>
 
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Health Score */}
-          <div className="card">
+          <div className="card p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-text-primary">Health Score</h3>
-              <span className="text-2xl font-bold text-green-400">98%</span>
+              <span className="text-sm font-medium text-[var(--text-secondary)]">Health Score</span>
+              <span className="text-2xl font-bold text-[var(--accent-green)]">98%</span>
             </div>
-            <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all duration-500"
                 style={{ width: '98%' }}
@@ -125,19 +131,32 @@ export default function RightPanel() {
             {stats.map((stat) => {
               const Icon = stat.icon
               return (
-                <div key={stat.label} className="card flex items-center gap-3">
-                  <div className={`p-2 rounded-lg bg-${stat.color}-500/20`}>
-                    <Icon className={`w-4 h-4 text-${stat.color}-400`} />
+                <div key={stat.label} className="card p-4 flex items-center gap-4">
+                  <div className={`p-2.5 rounded-xl ${
+                    stat.color === 'blue' ? 'bg-blue-500/15 border border-blue-500/20' :
+                    stat.color === 'purple' ? 'bg-purple-500/15 border border-purple-500/20' :
+                    'bg-green-500/15 border border-green-500/20'
+                  }`}>
+                    <Icon className={`w-5 h-5 ${
+                      stat.color === 'blue' ? 'text-blue-400' :
+                      stat.color === 'purple' ? 'text-purple-400' : 'text-green-400'
+                    }`} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-text-secondary">{stat.label}</p>
-                    <p className="text-sm font-semibold text-text-primary">{stat.value}</p>
-                  </div>
-                  <div className="w-16 h-8 bg-white/5 rounded overflow-hidden">
-                    <div 
-                      className={`h-full bg-${stat.color}-500/60 rounded transition-all duration-300`}
-                      style={{ width: stat.value.replace('%', '').replace('GB', '50') + '%' }}
-                    />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-sm font-medium text-[var(--text-secondary)]">{stat.label}</span>
+                      <span className="text-sm font-bold text-[var(--text-primary)]">{stat.value}</span>
+                    </div>
+                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          stat.color === 'blue' ? 'bg-gradient-to-r from-blue-500 to-blue-400' :
+                          stat.color === 'purple' ? 'bg-gradient-to-r from-purple-500 to-purple-400' :
+                          'bg-gradient-to-r from-green-500 to-green-400'
+                        }`}
+                        style={{ width: `${stat.width}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               )
@@ -145,41 +164,48 @@ export default function RightPanel() {
           </div>
 
           {/* Current Tick */}
-          <div className="card">
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-blue-400" />
-              <h3 className="text-sm font-semibold text-text-primary">Current Tick</h3>
+          <div className="card p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Clock className="w-5 h-5 text-blue-400" />
+              <span className="text-sm font-medium text-[var(--text-secondary)]">Current Tick</span>
             </div>
-            <p className="text-2xl font-mono font-bold text-text-primary">12,847</p>
-            <p className="text-xs text-text-secondary mt-1">Runtime: 02:34:12</p>
-          </div>
-
-          {/* Notifications & Warnings */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Alerts</h3>
-            {warnings.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
-                {item.type === 'success' && <CheckCircle className="w-4 h-4 text-green-400" />}
-                {item.type === 'warning' && <AlertTriangle className="w-4 h-4 text-yellow-400" />}
-                {item.type === 'error' && <XCircle className="w-4 h-4 text-red-400" />}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-text-primary truncate">{item.message}</p>
-                  <p className="text-xs text-text-secondary">{item.time}</p>
-                </div>
-              </div>
-            ))}
+            <p className="text-3xl font-mono font-bold text-[var(--text-primary)] tracking-tight">12,847</p>
+            <p className="text-xs text-[var(--text-tertiary)] mt-1.5 font-medium">Runtime: 02:34:12</p>
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="card text-center">
-              <p className="text-2xl font-bold text-text-primary">24</p>
-              <p className="text-xs text-text-secondary">Modules</p>
+            <div className="card p-4 text-center">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">24</p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1 font-medium">Modules</p>
             </div>
-            <div className="card text-center">
-              <p className="text-2xl font-bold text-text-primary">8</p>
-              <p className="text-xs text-text-secondary">AI Agents</p>
+            <div className="card p-4 text-center">
+              <p className="text-2xl font-bold text-[var(--text-primary)]">8</p>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1 font-medium">AI Agents</p>
             </div>
+          </div>
+
+          {/* Alerts */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)] px-1">Recent Alerts</h4>
+            {warnings.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+                {item.type === 'success' && (
+                  <div className="p-1.5 rounded-lg bg-green-500/10">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                  </div>
+                )}
+                {item.type === 'warning' && (
+                  <div className="p-1.5 rounded-lg bg-yellow-500/10">
+                    <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-[var(--text-primary)] truncate font-medium">{item.message}</p>
+                  <p className="text-xs text-[var(--text-tertiary)]">{item.time}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </aside>
