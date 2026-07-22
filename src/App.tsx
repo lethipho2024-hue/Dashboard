@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ThemeProvider } from './context/ThemeContext'
 import Sidebar from './components/Sidebar'
 import TopNav from './components/TopNav'
 import RightPanel from './components/RightPanel'
@@ -44,7 +45,8 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen bg-bg-primary overflow-hidden">
+    <ThemeProvider>
+    <div className="flex h-screen bg-[var(--bg-primary)] overflow-hidden transition-colors duration-300">
       {/* Left Sidebar */}
       <Sidebar 
         currentPage={currentPage} 
@@ -103,6 +105,7 @@ function App() {
         </div>
       )}
     </div>
+    </ThemeProvider>
   )
 }
 

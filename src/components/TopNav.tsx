@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Search, Bell, Sun, Moon, User } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 interface TopNavProps {
   searchQuery: string
@@ -9,8 +10,8 @@ interface TopNavProps {
 }
 
 export default function TopNav({ setShowSearch }: TopNavProps) {
+  const { theme, toggleTheme } = useTheme()
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [notifications] = useState([
     { id: 1, type: 'info', message: 'Framework initialized successfully', time: '2m ago' },
     { id: 2, type: 'warning', message: 'High memory usage detected', time: '5m ago' },
@@ -127,13 +128,13 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
 
         {/* Theme Toggle */}
         <button 
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-200"
+          onClick={toggleTheme}
+          className="p-2 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-default)] transition-all duration-200"
         >
           {theme === 'dark' ? (
-            <Sun className="w-5 h-5 text-text-secondary" />
+            <Sun className="w-5 h-5 text-[var(--text-secondary)]" />
           ) : (
-            <Moon className="w-5 h-5 text-text-secondary" />
+            <Moon className="w-5 h-5 text-[var(--text-secondary)]" />
           )}
         </button>
 
