@@ -32,7 +32,7 @@ export default function Settings() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors whitespace-nowrap flex-shrink-0 md:flex-shrink ${
+                    className={`w-auto md:w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors whitespace-nowrap flex-shrink-0 ${
                       activeTab === tab.id
                         ? 'bg-blue-500/20 text-blue-400'
                         : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
@@ -326,7 +326,7 @@ export default function Settings() {
           )}
 
           {/* Save Button */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 mb-20 lg:mb-0 flex justify-end">
             <button className="btn btn-primary flex items-center gap-2">
               <Save className="w-4 h-4" />
               Save Changes
