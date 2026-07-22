@@ -21,13 +21,13 @@ export default function RightPanel() {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="fixed bottom-4 right-4 z-40 p-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 lg:hidden"
+        className="fixed bottom-4 right-4 z-40 p-2.5 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 shadow-lg shadow-blue-500/30 lg:hidden"
       >
         {isExpanded ? (
-          <XCircle className="w-6 h-6 text-white" />
+          <XCircle className="w-5 h-5 text-white" />
         ) : (
           <div className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-white" />
+            <Activity className="w-4 h-4 text-white" />
             <span className="status-dot status-healthy" />
           </div>
         )}
