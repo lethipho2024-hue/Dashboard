@@ -7,7 +7,7 @@ FastAPI application for the Dashboard Gateway.
 import asyncio
 from contextlib import asynccontextmanager
 from typing import Optional
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
@@ -15,6 +15,7 @@ import uvicorn
 from .gateway import DashboardGateway
 from .config import GatewayConfig
 from .logger import get_logger
+from .commands import CommandRouter, CommandSchema
 
 
 # Global gateway instance
@@ -205,6 +206,94 @@ async def channels():
     raise HTTPException(status_code=503, detail="Gateway not available")
 
 
+# Command endpoints
+@app.post("/commands/execute")
+async def execute_command(
+    command: CommandSchema,
+    sender: str = "dashboard",
+    dev_mode: bool = False
+):
+    """Execute a command."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.post_command(command, sender, dev_mode)
+
+
+@app.get("/commands")
+async def list_commands(
+    category: Optional[str] = None,
+    permission: Optional[str] = None
+):
+    """List available commands."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.get_commands(category, permission)
+
+
+@app.get("/commands/{command_name}")
+async def get_command_info(command_name: str):
+    """Get command information."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.get_command_info(command_name)
+
+
+@app.get("/commands/queue")
+async def get_command_queue():
+    """Get command queue status."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.get_queue()
+
+
+@app.get("/commands/status/{request_id}")
+async def get_command_status(request_id: str):
+    """Get command execution status."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.get_status(request_id)
+
+
+@app.delete("/commands/queue/{request_id}")
+async def cancel_command(request_id: str):
+    """Cancel a queued command."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.cancel_command(request_id)
+
+
+@app.get("/commands/history")
+async def get_command_history(
+    limit: int = 50,
+    command: Optional[str] = None,
+    status: Optional[str] = None,
+    sender: Optional[str] = None
+):
+    """Get command history."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.get_history(limit, command, status, sender)
+
+
+@app.get("/commands/stats")
+async def get_command_stats():
+    """Get command dispatcher stats."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.get_stats()
+
+
+@app.post("/commands/validate")
+async def validate_command(
+    command: CommandSchema,
+    sender: str = "dashboard"
+):
+    """Validate a command without executing."""
+    global gateway
+    router = CommandRouter(gateway)
+    return await router.validate_command(command, sender)
+
+
 @app.get("/")
 async def root():
     """Root endpoint."""
@@ -214,6 +303,7 @@ async def root():
         "docs": "/docs",
         "health": "/health",
         "websocket": "/ws",
+        "commands": "/commands",
     }
 
 

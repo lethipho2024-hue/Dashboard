@@ -34,8 +34,9 @@ import Logs from './pages/Logs'
 import Plugins from './pages/Plugins'
 import License from './pages/License'
 import Settings from './pages/Settings'
+import CommandCenter from './pages/CommandCenter'
 
-type PageType = 'dashboard' | 'kernel' | 'health' | 'modules' | 'ai' | 'trainer' | 'replay' | 'metrics' | 'console' | 'logs' | 'plugins' | 'license' | 'settings'
+type PageType = 'dashboard' | 'kernel' | 'health' | 'modules' | 'ai' | 'trainer' | 'replay' | 'metrics' | 'console' | 'logs' | 'plugins' | 'license' | 'settings' | 'commands'
 
 // Initialize WebSocket connection
 const ws = getDashboardWs({ autoConnect: true })
@@ -74,6 +75,7 @@ function App() {
       case 'plugins': return <Plugins />
       case 'license': return <License />
       case 'settings': return <Settings />
+      case 'commands': return <CommandCenter />
       default: return <HomeDashboard />
     }
   }

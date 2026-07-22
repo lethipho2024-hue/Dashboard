@@ -3,10 +3,10 @@ import {
   LayoutDashboard, Cpu, Heart, Package, Bot, Dumbbell, 
   RotateCcw, BarChart3, Terminal, FileText, Puzzle, 
   Key, Settings, ChevronLeft, ChevronRight, ChevronDown, Zap, Menu, X, 
-  Activity, Layers, Code2
+  Activity, Layers, Code2, TerminalSquare
 } from 'lucide-react'
 
-type PageType = 'dashboard' | 'kernel' | 'health' | 'modules' | 'ai' | 'trainer' | 'replay' | 'metrics' | 'console' | 'logs' | 'plugins' | 'license' | 'settings'
+type PageType = 'dashboard' | 'kernel' | 'health' | 'modules' | 'ai' | 'trainer' | 'replay' | 'metrics' | 'console' | 'logs' | 'plugins' | 'license' | 'settings' | 'commands'
 
 interface SidebarProps {
   currentPage: PageType
@@ -25,11 +25,12 @@ const menuSections = [
     ]
   },
   {
-    title: 'Framework',
+    title: 'Control',
     items: [
+      { id: 'commands' as PageType, label: 'Commands', icon: TerminalSquare },
       { id: 'modules' as PageType, label: 'Modules', icon: Package },
-      { id: 'replay' as PageType, label: 'Replay', icon: RotateCcw },
       { id: 'trainer' as PageType, label: 'Trainer', icon: Dumbbell },
+      { id: 'replay' as PageType, label: 'Replay', icon: RotateCcw },
       { id: 'plugins' as PageType, label: 'Plugins', icon: Puzzle },
       { id: 'ai' as PageType, label: 'AI Center', icon: Bot },
     ]
