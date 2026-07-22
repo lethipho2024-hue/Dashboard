@@ -56,9 +56,9 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
   }
 
   return (
-    <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-bg-secondary/50 backdrop-blur-sm">
-      {/* Left: Search */}
-      <div className="flex items-center gap-4">
+    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-white/5 bg-bg-secondary/50 backdrop-blur-sm">
+      {/* Left: Search - Hidden on mobile */}
+      <div className="hidden md:flex items-center gap-4">
         <button 
           onClick={() => setShowSearch(true)}
           className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-200 group"
@@ -72,8 +72,14 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
         </button>
       </div>
 
+      {/* Mobile Title */}
+      <div className="md:hidden flex items-center gap-2">
+        <span className="text-lg font-bold text-text-primary">ZBGym</span>
+        <span className="status-dot status-healthy" />
+      </div>
+
       {/* Right: Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* Notifications */}
         <div className="relative">
           <button 
@@ -114,8 +120,8 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
           )}
         </div>
 
-        {/* License Badge */}
-        <div className="px-3 py-1.5 rounded-lg bg-green-500/20 border border-green-500/30">
+        {/* License Badge - Hidden on mobile */}
+        <div className="hidden md:block px-3 py-1.5 rounded-lg bg-green-500/20 border border-green-500/30">
           <span className="text-xs font-medium text-green-400">Pro License</span>
         </div>
 
@@ -132,7 +138,7 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
         </button>
 
         {/* User */}
-        <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+        <div className="hidden md:flex items-center gap-3 pl-4 border-l border-white/10">
           <div className="text-right">
             <p className="text-sm font-medium text-text-primary">Admin</p>
             <p className="text-xs text-text-secondary">admin@zbgym.io</p>
@@ -142,8 +148,8 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
           </div>
         </div>
 
-        {/* Time */}
-        <div className="pl-4 border-l border-white/10 text-right">
+        {/* Time - Hidden on mobile */}
+        <div className="hidden lg:block pl-4 border-l border-white/10 text-right">
           <p className="text-sm font-mono text-text-primary">{formatTime(currentTime)}</p>
           <p className="text-xs text-text-secondary">{formatDate(currentTime)}</p>
         </div>

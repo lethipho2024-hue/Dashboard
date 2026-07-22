@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { 
   LayoutDashboard, Cpu, Heart, Package, Bot, Dumbbell, 
   RotateCcw, BarChart3, Terminal, FileText, Puzzle, 
-  Key, Settings, ChevronLeft, ChevronRight, Zap
+  Key, Settings, ChevronLeft, ChevronRight, Zap, Menu, X
 } from 'lucide-react'
 
 type PageType = 'dashboard' | 'kernel' | 'health' | 'modules' | 'ai' | 'trainer' | 'replay' | 'metrics' | 'console' | 'logs' | 'plugins' | 'license' | 'settings'
@@ -32,92 +32,189 @@ const menuItems = [
 
 export default function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed }: SidebarProps) {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
+  const handleNavClick = (page: PageType) => {
+    setCurrentPage(page)
+    setMobileOpen(false)
+  }
+
+  // Desktop Sidebar
   return (
-    <aside 
-      className={`
-        relative flex flex-col h-full transition-all duration-300 ease-out
-        bg-bg-secondary border-r border-white/5
-        ${collapsed ? 'w-16' : 'w-60'}
-      `}
-    >
-      {/* Logo */}
-      <div className={`flex items-center gap-3 p-4 border-b border-white/5 ${collapsed ? 'justify-center' : ''}`}>
-        <div className="relative">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center glow-blue">
-            <Zap className="w-5 h-5 text-white" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-        </div>
-        {!collapsed && (
-          <div className="animate-fade-in">
-            <h1 className="text-lg font-bold text-text-primary">ZBGym</h1>
-            <p className="text-xs text-text-secondary">Control Center</p>
-          </div>
-        )}
-      </div>
+    <>
+      {/* Mobile Hamburger Button */}
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-4 left-4 z-50 p-2 rounded-xl bg-bg-secondary border border-white/10 md:hidden"
+      >
+        <Menu className="w-6 h-6 text-text-primary" />
+      </button>
 
-      {/* Menu */}
-      <nav className="flex-1 py-4 px-2 overflow-y-auto">
-        <div className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon
-            const isActive = currentPage === item.id
-            
-            return (
-              <div key={item.id} className="relative">
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile Sidebar */}
+      <aside 
+        className={`
+          fixed top-0 left-0 h-full w-72 z-50 flex flex-col
+          bg-bg-secondary border-r border-white/5
+          transform transition-transform duration-300 ease-out
+          md:hidden
+          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center glow-blue">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-text-primary">ZBGym</h1>
+              <p className="text-xs text-text-secondary">Control Center</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setMobileOpen(false)}
+            className="p-2 rounded-lg hover:bg-white/10"
+          >
+            <X className="w-6 h-6 text-text-secondary" />
+          </button>
+        </div>
+
+        {/* Menu */}
+        <nav className="flex-1 py-4 px-2 overflow-y-auto">
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon
+              const isActive = currentPage === item.id
+              
+              return (
                 <button
-                  onClick={() => setCurrentPage(item.id)}
-                  onMouseEnter={() => setHoveredItem(item.id)}
-                  onMouseLeave={() => setHoveredItem(null)}
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-                    transition-all duration-200 group relative
+                    w-full flex items-center gap-3 px-4 py-3 rounded-xl
+                    transition-all duration-200
                     ${isActive 
                       ? 'bg-blue-500/20 text-blue-400' 
                       : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`} />
-                  
-                  {!collapsed && (
-                    <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
-                      {item.label}
-                    </span>
-                  )}
-                  
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-blue-400' : ''}`} />
+                  <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
+                    {item.label}
+                  </span>
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-r-full" />
+                    <div className="ml-auto w-2 h-2 rounded-full bg-blue-500" />
                   )}
                 </button>
-                
-                {/* Tooltip */}
-                {collapsed && hoveredItem === item.id && (
-                  <div className="tooltip left-full ml-2 top-1/2 -translate-y-1/2">
-                    {item.label}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </nav>
+              )
+            })}
+          </div>
+        </nav>
 
-      {/* Collapse Button */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 bg-bg-secondary border border-white/10 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-white/10 transition-all duration-200 z-10"
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
-
-      {/* Version */}
-      {!collapsed && (
+        {/* Version */}
         <div className="p-4 border-t border-white/5">
           <p className="text-xs text-text-secondary">Version 1.0.0</p>
         </div>
-      )}
-    </aside>
+      </aside>
+
+      {/* Desktop Sidebar */}
+      <aside 
+        className={`
+          hidden md:flex relative flex-col h-full transition-all duration-300 ease-out
+          bg-bg-secondary border-r border-white/5
+          ${collapsed ? 'w-16' : 'w-60'}
+        `}
+      >
+        {/* Logo */}
+        <div className={`flex items-center gap-3 p-4 border-b border-white/5 ${collapsed ? 'justify-center' : ''}`}>
+          <div className="relative">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center glow-blue">
+              <Zap className="w-5 h-5 text-white" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+          </div>
+          {!collapsed && (
+            <div className="animate-fade-in">
+              <h1 className="text-lg font-bold text-text-primary">ZBGym</h1>
+              <p className="text-xs text-text-secondary">Control Center</p>
+            </div>
+          )}
+        </div>
+
+        {/* Menu */}
+        <nav className="flex-1 py-4 px-2 overflow-y-auto">
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const Icon = item.icon
+              const isActive = currentPage === item.id
+              
+              return (
+                <div key={item.id} className="relative">
+                  <button
+                    onClick={() => setCurrentPage(item.id)}
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    className={`
+                      w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+                      transition-all duration-200 group relative
+                      ${isActive 
+                        ? 'bg-blue-500/20 text-blue-400' 
+                        : 'text-text-secondary hover:text-text-primary hover:bg-white/5'
+                      }
+                    `}
+                  >
+                    <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`} />
+                    
+                    {!collapsed && (
+                      <span className={`text-sm font-medium ${isActive ? 'text-blue-400' : ''}`}>
+                        {item.label}
+                      </span>
+                    )}
+                    
+                    {isActive && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-500 rounded-r-full" />
+                    )}
+                  </button>
+                  
+                  {/* Tooltip */}
+                  {collapsed && hoveredItem === item.id && (
+                    <div className="tooltip left-full ml-2 top-1/2 -translate-y-1/2">
+                      {item.label}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </nav>
+
+        {/* Collapse Button */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-bg-secondary border border-white/10 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-white/10 transition-all duration-200 z-10"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
+
+        {/* Version */}
+        {!collapsed && (
+          <div className="p-4 border-t border-white/5">
+            <p className="text-xs text-text-secondary">Version 1.0.0</p>
+          </div>
+        )}
+      </aside>
+    </>
   )
 }
