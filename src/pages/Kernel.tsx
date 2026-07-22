@@ -1,62 +1,74 @@
-import { Clock, Activity, Package, Heart, Gauge, Zap } from 'lucide-react'
+import { Clock, Activity, Package, Heart, Gauge, Zap, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
+import { useHealth, useStats, useSessions } from '../services/zbgym'
 
 export default function Kernel() {
+  const { data: health, loading: healthLoading } = useHealth()
+  const { data: stats, loading: statsLoading, refetch: refetchStats } = useStats()
+  const { data: sessions, loading: sessionsLoading } = useSessions()
+
+  const isLoading = healthLoading || statsLoading || sessionsLoading
+
+  // Calculate kernel metrics from available data
+  const activeSessions = sessions?.filter(s => s.status === 'running') || []
+  const completedSessions = sessions?.filter(s => s.status === 'completed') || []
+  const totalSteps = sessions?.reduce((acc, s) => acc + (s.current_timestep || 0), 0) || 0
+
   const kernelCards = [
     { 
-      title: 'Runtime', 
-      value: '02:34:12', 
-      icon: Clock,
-      color: 'blue',
-      description: 'Total execution time'
+      title: 'Health Status', 
+      value: health?.status === 'healthy' ? 'Healthy' : 'Unhealthy', 
+      icon: Heart,
+      color: health?.status === 'healthy' ? 'green' : 'red',
+      description: 'Framework connection status'
     },
     { 
-      title: 'Current Tick', 
-      value: '12,847', 
+      title: 'Total Sessions', 
+      value: stats?.total_sessions?.toString() || '0', 
       icon: Activity,
-      color: 'green',
-      description: 'Current tick count'
+      color: 'blue',
+      description: 'All training sessions'
     },
     { 
-      title: 'Current Stage', 
-      value: 'Training', 
+      title: 'Active Sessions', 
+      value: stats?.active_sessions?.toString() || '0', 
       icon: Zap,
       color: 'purple',
-      description: 'Active execution stage'
+      description: 'Currently running'
     },
     { 
-      title: 'TPS', 
-      value: '60', 
+      title: 'Total Models', 
+      value: stats?.total_models?.toString() || '0', 
+      icon: Package,
+      color: 'green',
+      description: 'Trained models'
+    },
+    { 
+      title: 'Completed', 
+      value: completedSessions.length.toString(), 
+      icon: Activity,
+      color: 'green',
+      description: 'Finished sessions'
+    },
+    { 
+      title: 'Total Steps', 
+      value: totalSteps.toLocaleString(), 
       icon: Gauge,
       color: 'blue',
-      description: 'Ticks per second'
+      description: 'Timesteps processed'
     },
     { 
-      title: 'Event Dispatcher', 
-      value: 'Active', 
-      icon: Activity,
-      color: 'green',
-      description: 'Events processed: 1,247'
-    },
-    { 
-      title: 'Module Manager', 
-      value: '24', 
-      icon: Package,
-      color: 'purple',
-      description: 'Modules loaded'
-    },
-    { 
-      title: 'Health Monitor', 
-      value: '98%', 
+      title: 'Latest Reward', 
+      value: sessions?.[0]?.mean_reward?.toFixed(2) || '-', 
       icon: Heart,
-      color: 'green',
-      description: 'System health'
+      color: 'purple',
+      description: 'Last session reward'
     },
     { 
-      title: 'Metrics Collector', 
-      value: 'Active', 
-      icon: Activity,
-      color: 'blue',
-      description: 'Collecting 24 metrics'
+      title: 'Framework Status', 
+      value: health?.status === 'healthy' ? 'Online' : 'Offline', 
+      icon: Clock,
+      color: health?.status === 'healthy' ? 'green' : 'yellow',
+      description: 'Backend connection'
     },
   ]
 
@@ -77,10 +89,34 @@ export default function Kernel() {
           <p className="text-[var(--text-secondary)] mt-1">Core kernel status and metrics</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="status-dot status-healthy" />
-          <span className="text-sm font-medium text-green-400">Kernel Active</span>
+          <button onClick={refetchStats} className="btn btn-secondary flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <span className={`status-dot ${health?.status === 'healthy' ? 'status-healthy' : 'status-warning'}`} />
+          <span className={`text-sm font-medium ${health?.status === 'healthy' ? 'text-green-400' : 'text-yellow-400'}`}>
+            {health?.status === 'healthy' ? 'Framework Online' : 'Framework Offline'}
+          </span>
         </div>
       </div>
+
+      {/* Error/Loading State */}
+      {isLoading && (
+        <div className="card flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-blue-400 mr-3" />
+          <span className="text-[var(--text-secondary)]">Loading kernel metrics...</span>
+        </div>
+      )}
+
+      {/* No Data Message */}
+      {!isLoading && health?.status !== 'healthy' && (
+        <div className="card bg-yellow-500/10 border border-yellow-500/20 p-4">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-yellow-400" />
+            <p className="text-yellow-400">Cannot connect to ZBGym backend. Make sure the backend is running on port 8080.</p>
+          </div>
+        </div>
+      )}
 
       {/* Kernel Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -102,45 +138,57 @@ export default function Kernel() {
         })}
       </div>
 
-      {/* Timeline */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Execution Timeline</h3>
-        <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-white/10" />
-          <div className="space-y-6">
-            {[
-              { time: '00:00:00', event: 'Kernel initialized', status: 'success' },
-              { time: '00:00:01', event: 'Loading modules...', status: 'info' },
-              { time: '00:00:05', event: '24 modules loaded', status: 'success' },
-              { time: '00:00:10', event: 'Starting execution loop', status: 'info' },
-              { time: '00:00:15', event: 'Training stage started', status: 'info' },
-              { time: '02:34:12', event: 'Current: Tick 12,847', status: 'success' },
-            ].map((item, idx) => (
-              <div key={idx} className="relative flex items-start gap-4 pl-10">
-                <div className={`absolute left-2.5 w-3 h-3 rounded-full ${
-                  item.status === 'success' ? 'bg-green-500' :
-                  item.status === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-                }`} />
-                <div>
-                  <p className="text-sm font-mono text-[var(--text-secondary)]">{item.time}</p>
-                  <p className="text-[var(--text-primary)]">{item.event}</p>
+      {/* Backend Limitation Notice */}
+      <div className="card bg-blue-500/10 border border-blue-500/20">
+        <h3 className="text-lg font-semibold text-blue-400 mb-3">Kernel Data from Backend</h3>
+        <div className="space-y-2 text-sm text-[var(--text-secondary)]">
+          <p>• <strong>Available:</strong> Health status, session counts, model counts, latest reward</p>
+          <p>• <strong>Not available:</strong> Runtime, tick count, TPS (ticks per second), event dispatcher, module manager</p>
+          <p className="text-xs mt-2 opacity-75">
+            These metrics require additional endpoints in the ZBGym backend (e.g., /kernel/status, /kernel/metrics)
+          </p>
+        </div>
+      </div>
+
+      {/* Active Sessions */}
+      {activeSessions.length > 0 && (
+        <div className="card">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Active Training Sessions</h3>
+          <div className="space-y-3">
+            {activeSessions.map((session) => (
+              <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <div>
+                    <p className="text-[var(--text-primary)] font-medium">Session #{session.id}</p>
+                    <p className="text-xs text-[var(--text-secondary)]">{session.algorithm} - {session.env_id}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-[var(--text-primary)] font-mono">{session.current_timestep.toLocaleString()} steps</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Reward: {session.mean_reward.toFixed(2)}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Kernel Info */}
+      {/* System Information - Demo */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card">
+        <div className="card opacity-60">
           <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">System Information</h3>
+          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-4">
+            <p className="text-sm text-[var(--text-secondary)]">
+              System info (version, architecture) requires additional backend endpoint.
+            </p>
+          </div>
           <div className="space-y-3">
             {[
-              { label: 'Version', value: '1.0.0' },
-              { label: 'Build', value: 'Release' },
-              { label: 'Architecture', value: 'x86_64' },
-              { label: 'Python Version', value: '3.11.0' },
+              { label: 'Version', value: 'N/A' },
+              { label: 'Build', value: 'N/A' },
+              { label: 'Architecture', value: 'N/A' },
+              { label: 'Python Version', value: 'N/A' },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
                 <span className="text-[var(--text-secondary)]">{item.label}</span>
@@ -150,34 +198,39 @@ export default function Kernel() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card opacity-60">
           <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Performance</h3>
+          <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20 mb-4">
+            <p className="text-sm text-[var(--text-secondary)]">
+              Performance metrics (CPU, memory, GPU) require additional backend endpoint.
+            </p>
+          </div>
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">CPU Time</span>
-                <span className="text-[var(--text-primary)]">1,247s</span>
+                <span className="text-[var(--text-primary)]">N/A</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-3/4 bg-blue-500 rounded-full" />
+                <div className="h-full w-0 bg-blue-500 rounded-full" />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">Memory Usage</span>
-                <span className="text-[var(--text-primary)]">14.2 GB</span>
+                <span className="text-[var(--text-primary)]">N/A</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-1/2 bg-purple-500 rounded-full" />
+                <div className="h-full w-0 bg-purple-500 rounded-full" />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[var(--text-secondary)]">GPU Utilization</span>
-                <span className="text-[var(--text-primary)]">82%</span>
+                <span className="text-[var(--text-primary)]">N/A</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-[82%] bg-green-500 rounded-full" />
+                <div className="h-full w-0 bg-green-500 rounded-full" />
               </div>
             </div>
           </div>
