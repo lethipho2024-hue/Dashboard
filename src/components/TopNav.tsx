@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Search, Bell, Sun, Moon, User, Zap } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
+import { useLogs } from '../services/zbgym'
 
 interface TopNavProps {
   searchQuery: string
@@ -12,12 +13,18 @@ interface TopNavProps {
 export default function TopNav({ setShowSearch }: TopNavProps) {
   const { theme, toggleTheme } = useTheme()
   const [currentTime, setCurrentTime] = useState(new Date())
-  const [notifications] = useState([
-    { id: 1, type: 'info', message: 'Framework initialized successfully', time: '2m ago' },
-    { id: 2, type: 'warning', message: 'High memory usage detected', time: '5m ago' },
-    { id: 3, type: 'success', message: 'AI Agent completed task', time: '10m ago' },
-  ])
   const [showNotifications, setShowNotifications] = useState(false)
+  
+  // Get latest logs as notifications
+  const { data: logs } = useLogs({ limit: 10 })
+  
+  // Convert logs to notifications
+  const notifications = (logs || []).slice(0, 5).map((log, idx) => ({
+    id: log.id ?? idx,
+    type: log.level?.toLowerCase() || 'info',
+    message: log.message,
+    time: log.timestamp || 'Unknown'
+  })).reverse()
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -120,35 +127,48 @@ export default function TopNav({ setShowSearch }: TopNavProps) {
               active:scale-95"
           >
             <Bell className="w-5 h-5 text-[var(--text-secondary)]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[var(--bg-primary)]" />
+            {notifications.some(n => n.type === 'error' || n.type === 'warning') && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-[var(--bg-primary)]" />
+            )}
           </button>
           
           {showNotifications && (
             <div className="absolute right-0 top-full mt-2 w-80 
               glass rounded-xl overflow-hidden z-50 animate-fade-in">
-              <div className="p-4 border-b border-white/[0.08]">
+              <div className="p-4 border-b border-white/[0.08] flex items-center justify-between">
                 <h3 className="font-semibold text-[var(--text-primary)]">Notifications</h3>
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  {notifications.length} from logs
+                </span>
               </div>
               <div className="max-h-80 overflow-y-auto">
-                {notifications.map((notif) => (
-                  <div 
-                    key={notif.id}
-                    className="p-4 border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`
-                        w-2 h-2 rounded-full mt-2 flex-shrink-0
-                        ${notif.type === 'info' ? 'bg-blue-500' : ''}
-                        ${notif.type === 'warning' ? 'bg-yellow-500' : ''}
-                        ${notif.type === 'success' ? 'bg-green-500' : ''}
-                      `} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-[var(--text-primary)]">{notif.message}</p>
-                        <p className="text-xs text-[var(--text-tertiary)] mt-1">{notif.time}</p>
+                {notifications.length > 0 ? (
+                  notifications.map((notif) => (
+                    <div 
+                      key={notif.id}
+                      className="p-4 border-b border-white/[0.04] hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`
+                          w-2 h-2 rounded-full mt-2 flex-shrink-0
+                          ${notif.type === 'info' ? 'bg-blue-500' : ''}
+                          ${notif.type === 'warning' ? 'bg-yellow-500' : ''}
+                          ${notif.type === 'error' ? 'bg-red-500' : ''}
+                          ${notif.type === 'debug' ? 'bg-purple-500' : ''}
+                        `} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-[var(--text-primary)]">{notif.message}</p>
+                          <p className="text-xs text-[var(--text-tertiary)] mt-1">{notif.time}</p>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-[var(--text-tertiary)]">
+                    <p>No notifications</p>
+                    <p className="text-xs mt-1">Events will appear here</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           )}
