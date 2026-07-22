@@ -73,8 +73,8 @@ export default function Kernel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Kernel</h1>
-          <p className="text-text-secondary mt-1">Core kernel status and metrics</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Kernel</h1>
+          <p className="text-[var(--text-secondary)] mt-1">Core kernel status and metrics</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="status-dot status-healthy" />
@@ -94,9 +94,9 @@ export default function Kernel() {
                   <Icon className={`w-6 h-6 ${colors.text}`} />
                 </div>
               </div>
-              <p className="text-xs text-text-secondary uppercase tracking-wider">{card.title}</p>
-              <p className="text-2xl font-bold text-text-primary mt-1">{card.value}</p>
-              <p className="text-sm text-text-secondary mt-2">{card.description}</p>
+              <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">{card.title}</p>
+              <p className="text-2xl font-bold text-[var(--text-primary)] mt-1">{card.value}</p>
+              <p className="text-sm text-[var(--text-secondary)] mt-2">{card.description}</p>
             </div>
           )
         })}
@@ -104,7 +104,7 @@ export default function Kernel() {
 
       {/* Timeline */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-text-primary mb-6">Execution Timeline</h3>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Execution Timeline</h3>
         <div className="relative">
           <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-white/10" />
           <div className="space-y-6">
@@ -122,8 +122,8 @@ export default function Kernel() {
                   item.status === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
                 }`} />
                 <div>
-                  <p className="text-sm font-mono text-text-secondary">{item.time}</p>
-                  <p className="text-text-primary">{item.event}</p>
+                  <p className="text-sm font-mono text-[var(--text-secondary)]">{item.time}</p>
+                  <p className="text-[var(--text-primary)]">{item.event}</p>
                 </div>
               </div>
             ))}
@@ -134,7 +134,7 @@ export default function Kernel() {
       {/* Kernel Info */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">System Information</h3>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">System Information</h3>
           <div className="space-y-3">
             {[
               { label: 'Version', value: '1.0.0' },
@@ -143,20 +143,20 @@ export default function Kernel() {
               { label: 'Python Version', value: '3.11.0' },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <span className="text-text-secondary">{item.label}</span>
-                <span className="text-text-primary font-mono">{item.value}</span>
+                <span className="text-[var(--text-secondary)]">{item.label}</span>
+                <span className="text-[var(--text-primary)] font-mono">{item.value}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="card">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">Performance</h3>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Performance</h3>
           <div className="space-y-4">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-text-secondary">CPU Time</span>
-                <span className="text-text-primary">1,247s</span>
+                <span className="text-[var(--text-secondary)]">CPU Time</span>
+                <span className="text-[var(--text-primary)]">1,247s</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full w-3/4 bg-blue-500 rounded-full" />
@@ -164,8 +164,8 @@ export default function Kernel() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-text-secondary">Memory Usage</span>
-                <span className="text-text-primary">14.2 GB</span>
+                <span className="text-[var(--text-secondary)]">Memory Usage</span>
+                <span className="text-[var(--text-primary)]">14.2 GB</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full w-1/2 bg-purple-500 rounded-full" />
@@ -173,8 +173,8 @@ export default function Kernel() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-text-secondary">GPU Utilization</span>
-                <span className="text-text-primary">82%</span>
+                <span className="text-[var(--text-secondary)]">GPU Utilization</span>
+                <span className="text-[var(--text-primary)]">82%</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full w-[82%] bg-green-500 rounded-full" />

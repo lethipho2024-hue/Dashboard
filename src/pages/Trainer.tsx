@@ -19,8 +19,8 @@ export default function Trainer() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Trainer</h1>
-          <p className="text-text-secondary mt-1">Training session monitoring</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Trainer</h1>
+          <p className="text-[var(--text-secondary)] mt-1">Training session monitoring</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 rounded-xl bg-green-500/20 border border-green-500/30 flex items-center gap-2">
@@ -37,10 +37,10 @@ export default function Trainer() {
             <button className="p-3 rounded-xl bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors">
               <Play className="w-6 h-6" />
             </button>
-            <button className="p-3 rounded-xl bg-white/10 text-text-secondary hover:bg-white/20 transition-colors">
+            <button className="p-3 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors">
               <Pause className="w-6 h-6" />
             </button>
-            <button className="p-3 rounded-xl bg-white/10 text-text-secondary hover:bg-white/20 transition-colors">
+            <button className="p-3 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors">
               <SkipForward className="w-6 h-6" />
             </button>
           </div>
@@ -57,21 +57,21 @@ export default function Trainer() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {trainingStats.map((stat) => (
           <div key={stat.label} className="card text-center">
-            <p className="text-xs text-text-secondary uppercase tracking-wider">{stat.label}</p>
-            <p className="text-3xl font-bold text-text-primary mt-2">{stat.value}</p>
+            <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider">{stat.label}</p>
+            <p className="text-3xl font-bold text-[var(--text-primary)] mt-2">{stat.value}</p>
           </div>
         ))}
       </div>
 
       {/* Progress */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-text-primary mb-6">Training Progress</h3>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-6">Training Progress</h3>
         <div className="space-y-6">
           {progressData.map((item) => (
             <div key={item.label} className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-text-primary">{item.label}</span>
-                <span className="text-sm text-text-secondary">Target: {item.target}</span>
+                <span className="text-[var(--text-primary)]">{item.label}</span>
+                <span className="text-sm text-[var(--text-secondary)]">Target: {item.target}</span>
               </div>
               <div className="relative">
                 <div className="h-3 bg-white/10 rounded-full overflow-hidden">
@@ -86,8 +86,8 @@ export default function Trainer() {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-text-secondary">Current</span>
-                <span className="text-sm font-medium text-text-primary">{item.current}</span>
+                <span className="text-sm text-[var(--text-secondary)]">Current</span>
+                <span className="text-sm font-medium text-[var(--text-primary)]">{item.current}</span>
               </div>
             </div>
           ))}
@@ -96,7 +96,7 @@ export default function Trainer() {
 
       {/* Checkpoints */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Recent Checkpoints</h3>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Recent Checkpoints</h3>
         <div className="space-y-3">
           {[
             { name: 'checkpoint_1200', time: '2 min ago', reward: '+2,340' },
@@ -108,8 +108,8 @@ export default function Trainer() {
               <div className="flex items-center gap-3">
                 <Trophy className="w-5 h-5 text-yellow-400" />
                 <div>
-                  <p className="text-text-primary font-medium">{checkpoint.name}</p>
-                  <p className="text-xs text-text-secondary">{checkpoint.time}</p>
+                  <p className="text-[var(--text-primary)] font-medium">{checkpoint.name}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">{checkpoint.time}</p>
                 </div>
               </div>
               <span className="text-green-400 font-medium">{checkpoint.reward}</span>

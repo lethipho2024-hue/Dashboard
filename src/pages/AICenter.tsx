@@ -59,8 +59,8 @@ export default function AICenter() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">AI Center</h1>
-          <p className="text-text-secondary mt-1">Monitor and manage AI agents</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">AI Center</h1>
+          <p className="text-[var(--text-secondary)] mt-1">Monitor and manage AI agents</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center gap-2">
@@ -81,14 +81,14 @@ export default function AICenter() {
                   {agent.avatar}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-text-primary">{agent.name}</h3>
-                  <p className="text-xs text-text-secondary">{agent.role}</p>
+                  <h3 className="font-semibold text-[var(--text-primary)]">{agent.name}</h3>
+                  <p className="text-xs text-[var(--text-secondary)]">{agent.role}</p>
                 </div>
               </div>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 agent.status === 'active' 
                   ? 'bg-green-500/20 text-green-400' 
-                  : 'bg-white/10 text-text-secondary'
+                  : 'bg-white/10 text-[var(--text-secondary)]'
               }`}>
                 {agent.status}
               </span>
@@ -96,15 +96,15 @@ export default function AICenter() {
 
             {/* Current Task */}
             <div className="mb-4">
-              <p className="text-xs text-text-secondary mb-1">Current Task</p>
-              <p className="text-sm text-text-primary">{agent.currentTask}</p>
+              <p className="text-xs text-[var(--text-secondary)] mb-1">Current Task</p>
+              <p className="text-sm text-[var(--text-primary)]">{agent.currentTask}</p>
             </div>
 
             {/* Progress */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-text-secondary">Progress</span>
-                <span className="text-xs font-medium text-text-primary">{agent.progress}%</span>
+                <span className="text-xs text-[var(--text-secondary)]">Progress</span>
+                <span className="text-xs font-medium text-[var(--text-primary)]">{agent.progress}%</span>
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div 
@@ -117,12 +117,12 @@ export default function AICenter() {
             {/* Stats */}
             <div className="flex items-center justify-between pt-4 border-t border-white/10">
               <div>
-                <p className="text-xs text-text-secondary">Runtime</p>
-                <p className="text-sm font-mono text-text-primary">{agent.runtime}</p>
+                <p className="text-xs text-[var(--text-secondary)]">Runtime</p>
+                <p className="text-sm font-mono text-[var(--text-primary)]">{agent.runtime}</p>
               </div>
               <div>
-                <p className="text-xs text-text-secondary">Memory</p>
-                <p className="text-sm font-mono text-text-primary">{agent.memory}</p>
+                <p className="text-xs text-[var(--text-secondary)]">Memory</p>
+                <p className="text-sm font-mono text-[var(--text-primary)]">{agent.memory}</p>
               </div>
               <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-sm transition-colors">
                 Details
@@ -134,21 +134,21 @@ export default function AICenter() {
 
       {/* Quick Actions */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Quick Actions</h3>
         <div className="flex flex-wrap gap-3">
           <button className="px-4 py-2 rounded-xl bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors flex items-center gap-2">
             <Brain className="w-4 h-4" />
             Add Agent
           </button>
-          <button className="px-4 py-2 rounded-xl bg-white/10 text-text-secondary hover:bg-white/20 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2">
             <Code className="w-4 h-4" />
             Deploy All
           </button>
-          <button className="px-4 py-2 rounded-xl bg-white/10 text-text-secondary hover:bg-white/20 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2">
             <TestTube className="w-4 h-4" />
             Run Tests
           </button>
-          <button className="px-4 py-2 rounded-xl bg-white/10 text-text-secondary hover:bg-white/20 transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 rounded-xl bg-white/10 text-[var(--text-secondary)] hover:bg-white/20 transition-colors flex items-center gap-2">
             <Search className="w-4 h-4" />
             Analyze
           </button>

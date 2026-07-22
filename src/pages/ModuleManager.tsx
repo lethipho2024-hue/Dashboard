@@ -80,24 +80,24 @@ export default function ModuleManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Module Manager</h1>
-          <p className="text-text-secondary mt-1">Manage and monitor framework modules</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Module Manager</h1>
+          <p className="text-[var(--text-secondary)] mt-1">Manage and monitor framework modules</p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-text-secondary">Total: {modules.length} modules</span>
+          <span className="text-[var(--text-secondary)]">Total: {modules.length} modules</span>
           <button className="btn btn-primary">Load Module</button>
         </div>
       </div>
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-secondary)]" />
         <input
           type="text"
           placeholder="Search modules..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-text-primary placeholder-text-secondary focus:outline-none focus:border-blue-500/50 transition-colors"
+          className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-[var(--text-primary)] placeholder-text-secondary focus:outline-none focus:border-blue-500/50 transition-colors"
         />
       </div>
 
@@ -107,13 +107,13 @@ export default function ModuleManager() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Module</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Version</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Memory</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Runtime</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Health</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Module</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Version</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Memory</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Runtime</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Health</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -127,18 +127,18 @@ export default function ModuleManager() {
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         {expandedRow === module.id ? (
-                          <ChevronDown className="w-4 h-4 text-text-secondary" />
+                          <ChevronDown className="w-4 h-4 text-[var(--text-secondary)]" />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-text-secondary" />
+                          <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
                         )}
                         <Package className="w-5 h-5 text-blue-400" />
-                        <span className="font-medium text-text-primary">{module.name}</span>
+                        <span className="font-medium text-[var(--text-primary)]">{module.name}</span>
                       </div>
                     </td>
                     <td className="px-4 py-4">{getStatusBadge(module.status)}</td>
-                    <td className="px-4 py-4 text-text-secondary font-mono">v{module.version}</td>
-                    <td className="px-4 py-4 text-text-secondary">{module.memory}</td>
-                    <td className="px-4 py-4 text-text-secondary font-mono">{module.runtime}</td>
+                    <td className="px-4 py-4 text-[var(--text-secondary)] font-mono">v{module.version}</td>
+                    <td className="px-4 py-4 text-[var(--text-secondary)]">{module.memory}</td>
+                    <td className="px-4 py-4 text-[var(--text-secondary)] font-mono">{module.runtime}</td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-2 bg-white/10 rounded-full overflow-hidden">
@@ -150,19 +150,19 @@ export default function ModuleManager() {
                             style={{ width: `${module.health}%` }}
                           />
                         </div>
-                        <span className="text-sm text-text-secondary">{module.health}%</span>
+                        <span className="text-sm text-[var(--text-secondary)]">{module.health}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <button className="p-2 rounded-lg hover:bg-white/10 transition-colors">
-                        <MoreVertical className="w-4 h-4 text-text-secondary" />
+                        <MoreVertical className="w-4 h-4 text-[var(--text-secondary)]" />
                       </button>
                     </td>
                   </tr>
                   {expandedRow === module.id && (
                     <tr key={`${module.id}-expanded`}>
                       <td colSpan={7} className="px-4 py-4 bg-white/5">
-                        <p className="text-text-secondary">{module.description}</p>
+                        <p className="text-[var(--text-secondary)]">{module.description}</p>
                         <div className="flex gap-4 mt-4">
                           <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-sm transition-colors">Reload</button>
                           <button className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-sm transition-colors">Configure</button>
