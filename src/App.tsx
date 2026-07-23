@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { 
   ConnectionProvider, 
@@ -16,11 +17,15 @@ import {
   ToastContainer
 } from './store'
 import { getDashboardWs } from './services/websocket'
+import { AuthStatus } from './services/auth'
+import { useAuth, useSessionExpiry } from './hooks'
+import { AuthGuard, SessionExpiryWarning } from './components/AuthGuard'
 import Sidebar from './components/Sidebar'
 import TopNav from './components/TopNav'
 import RightPanel from './components/RightPanel'
 import ConnectionStatus from './components/ConnectionStatus'
 import DevDebugPanel from './components/DevDebugPanel'
+import UserMenu from './components/UserMenu'
 import HomeDashboard from './pages/HomeDashboard'
 import FrameworkHealth from './pages/FrameworkHealth'
 import Kernel from './pages/Kernel'
@@ -32,16 +37,19 @@ import Replay from './pages/Replay'
 import EventConsole from './pages/EventConsole'
 import Logs from './pages/Logs'
 import Plugins from './pages/Plugins'
-import License from './pages/License'
+import LicensePage from './pages/LicensePage'
 import Settings from './pages/Settings'
 import CommandCenter from './pages/CommandCenter'
+import Login from './pages/Login'
 
 type PageType = 'dashboard' | 'kernel' | 'health' | 'modules' | 'ai' | 'trainer' | 'replay' | 'metrics' | 'console' | 'logs' | 'plugins' | 'license' | 'settings' | 'commands'
 
 // Initialize WebSocket connection
 const ws = getDashboardWs({ autoConnect: true })
 
-function App() {
+// Protected routes wrapper
+function ProtectedLayout() {
+  const { status } = useAuth()
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,11 +81,12 @@ function App() {
       case 'console': return <EventConsole />
       case 'logs': return <Logs />
       case 'plugins': return <Plugins />
-      case 'license': return <License />
+      case 'license': return <LicensePage />
       case 'settings': return <Settings />
       case 'commands': return <CommandCenter />
       default: return <HomeDashboard />
     }
+  }
   }
 
   return (
@@ -94,6 +103,7 @@ function App() {
                         <TrainerProvider>
                           <PluginsProvider>
                             <AIProvider>
+                              <SessionExpiryWarning />
                               <div className="flex h-screen bg-[var(--bg-primary)] overflow-hidden transition-colors duration-300">
                                 {/* Left Sidebar */}
                                 <Sidebar 
@@ -175,6 +185,50 @@ function App() {
         </ConnectionProvider>
       </NotificationsProvider>
     </ThemeProvider>
+  )
+}
+
+function App() {
+  const { status, isLoading } = useAuth()
+
+  // Show loading while initializing
+  if (isLoading || status === AuthStatus.UNKNOWN) {
+    return (
+      <ThemeProvider>
+        <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 flex items-center justify-center animate-pulse">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <p className="text-[var(--text-secondary)]">Loading...</p>
+          </div>
+        </div>
+      </ThemeProvider>
+    )
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Login Route */}
+        <Route 
+          path="/login" 
+          element={status === AuthStatus.AUTHENTICATED ? <Navigate to="/" replace /> : <Login />} 
+        />
+        
+        {/* Protected Routes */}
+        <Route
+          path="/*"
+          element={
+            <AuthGuard fallback={status === AuthStatus.UNAUTHENTICATED ? <Navigate to="/login" replace /> : null}>
+              <ProtectedLayout />
+            </AuthGuard>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

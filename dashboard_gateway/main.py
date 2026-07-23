@@ -16,6 +16,8 @@ from .gateway import DashboardGateway
 from .config import GatewayConfig
 from .logger import get_logger
 from .commands import CommandRouter, CommandSchema
+from .auth import AuthRouter, LicenseRouter, AuditRouter, get_auth_router, get_license_router, get_audit_router, AuthMiddleware
+from .auth.sessions import get_session_manager
 
 
 # Global gateway instance
@@ -209,6 +211,7 @@ async def channels():
 # Command endpoints
 @app.post("/commands/execute")
 async def execute_command(
+    request: Request,
     command: CommandSchema,
     sender: str = "dashboard",
     dev_mode: bool = False
@@ -294,6 +297,174 @@ async def validate_command(
     return await router.validate_command(command, sender)
 
 
+# Auth endpoints
+from .auth import LoginRequest
+
+@app.post("/auth/login")
+async def login(request: Request, login_data: LoginRequest):
+    """User login."""
+    router = get_auth_router()
+    result = await router.post_login(request, login_data)
+    
+    # Log login attempt
+    audit = get_audit_router()
+    audit._logger.log_login(
+        username=login_data.username,
+        success=result.success,
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("User-Agent"),
+        error_message=result.message if not result.success else None
+    )
+    
+    return result
+
+
+@app.post("/auth/logout")
+async def logout(request: Request):
+    """User logout."""
+    from .auth.authentication import get_current_user
+    user = None
+    try:
+        user = get_current_user(request)
+    except:
+        pass
+    
+    if user:
+        audit = get_audit_router()
+        audit._logger.log_logout(
+            user_id=user.user_id,
+            username=user.username,
+            ip_address=request.client.host if request.client else None
+        )
+    
+    router = get_auth_router()
+    return await router.post_logout(request, user)
+
+
+@app.post("/auth/refresh")
+async def refresh_token(refresh_data: dict):
+    """Refresh access token."""
+    from .auth.router import RefreshRequest
+    router = get_auth_router()
+    return await router.post_refresh(RefreshRequest(**refresh_data))
+
+
+@app.get("/auth/me")
+async def get_me(request: Request):
+    """Get current user."""
+    router = get_auth_router()
+    return await router.get_me(request)
+
+
+@app.get("/auth/session")
+async def get_session(request: Request):
+    """Get current session."""
+    router = get_auth_router()
+    return await router.get_session(request)
+
+
+@app.post("/auth/change-password")
+async def change_password(request: Request, data: dict):
+    """Change password."""
+    router = get_auth_router()
+    return await router.post_change_password(
+        request,
+        data.get("current_password", ""),
+        data.get("new_password", ""),
+        request
+    )
+
+
+@app.get("/permissions")
+async def get_permissions(request: Request):
+    """Get user permissions."""
+    router = get_auth_router()
+    return await router.get_permissions(request)
+
+
+@app.get("/roles")
+async def get_roles():
+    """Get all roles."""
+    router = get_auth_router()
+    return await router.get_roles()
+
+
+# License endpoints
+@app.get("/license")
+async def get_license():
+    """Get license info."""
+    router = get_license_router()
+    return await router.get_license()
+
+
+@app.post("/license/activate")
+async def activate_license(data: dict):
+    """Activate license."""
+    from .license.router import ActivateRequest
+    router = get_license_router()
+    return await router.activate(ActivateRequest(**data))
+
+
+@app.post("/license/deactivate")
+async def deactivate_license(license_key: Optional[str] = None):
+    """Deactivate license."""
+    router = get_license_router()
+    return await router.deactivate(license_key)
+
+
+@app.post("/license/refresh")
+async def refresh_license(license_key: Optional[str] = None):
+    """Refresh license."""
+    router = get_license_router()
+    return await router.refresh(license_key)
+
+
+@app.get("/license/status")
+async def get_license_status():
+    """Get license status."""
+    router = get_license_router()
+    return await router.get_status()
+
+
+@app.post("/license/validate")
+async def validate_license(data: dict):
+    """Validate license."""
+    router = get_license_router()
+    return await router.validate(
+        data.get("license", {}),
+        data.get("hardware_info")
+    )
+
+
+# Audit endpoints
+@app.get("/audit/logs")
+async def get_audit_logs(
+    request: Request,
+    event: Optional[str] = None,
+    user_id: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    limit: int = 100
+):
+    """Get audit logs."""
+    router = get_audit_router()
+    return await router.get_logs(request, event, user_id, start_date, end_date, limit)
+
+
+@app.get("/audit/history")
+async def get_audit_history(request: Request, limit: int = 100):
+    """Get audit history."""
+    router = get_audit_router()
+    return await router.get_history(request, limit)
+
+
+@app.get("/audit/stats")
+async def get_audit_stats(request: Request):
+    """Get audit stats."""
+    router = get_audit_router()
+    return await router.get_stats(request)
+
+
 @app.get("/")
 async def root():
     """Root endpoint."""
@@ -304,6 +475,9 @@ async def root():
         "health": "/health",
         "websocket": "/ws",
         "commands": "/commands",
+        "auth": "/auth",
+        "license": "/license",
+        "audit": "/audit",
     }
 
 
